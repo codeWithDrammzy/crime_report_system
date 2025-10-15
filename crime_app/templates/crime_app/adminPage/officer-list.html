@@ -1,0 +1,131 @@
+{% extends "crime_app/adminPage/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg p-6">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Officers List</h2>
+    <button id="toggleFormBtn"
+      class="bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition">
+      ➕ New Officer
+    </button>
+  </div>
+
+  <!-- Hidden Form -->
+ <!-- Officer Form (Centered Modal) -->
+<div id="officerForm"
+  class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+  <div class="bg-white p-8 rounded-lg shadow-xl border border-gray-200 w-full max-w-lg relative">
+    <!-- Close Button -->
+    <button id="closeFormBtn" class="absolute top-3 right-3 text-gray-600 hover:text-red-500 text-2xl">
+      &times;
+    </button>
+
+    <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Add New Officer</h2>
+
+   <form method="POST" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <button type="submit"
+        class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+        Add Officer
+      </button>
+    </form>
+
+  </div>
+</div>
+
+
+  {% if messages %}
+  <div class="mt-4">
+    {% for message in messages %}
+    <p class="text-green-600 text-center font-semibold">{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  
+  <!-- Officers Table -->
+  <div class="overflow-x-auto">
+    <table class="w-full border border-gray-200 rounded-lg">
+      <thead class="bg-gray-100 border-b border-gray-300">
+        <tr>
+          <th class="text-left p-3">Officer</th>
+          <th class="text-left p-3">Email</th>
+          <th class="text-left p-3">Rank</th>
+          <th class="text-left p-3">Badge No.</th>
+          <th class="text-left p-3">Station</th>
+          <th class="text-center p-3">On Duty</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for officer in officers %}
+        <tr class="border-b hover:bg-gray-50 transition">
+          <!-- Officer Name + Profile Picture -->
+          <td class="p-3 flex items-center space-x-3">
+            {% if officer.profile_picture %}
+              <img src="{{ officer.profile_picture.url }}" alt="{{ officer.user.get_full_name }}"
+                class="w-10 h-10 rounded-full object-cover border border-gray-300">
+            {% else %}
+              <img src="{% static 'images/default_profile.png' %}" alt="Default Profile"
+                class="w-10 h-10 rounded-full object-cover border border-gray-300">
+            {% endif %}
+            <span class="font-semibold text-gray-700">{{ officer.user.get_full_name }}</span>
+          </td>
+
+          <!-- Email -->
+          <td class="p-3">{{ officer.user.email|default:"N/A" }}</td>
+
+          <!-- Rank -->
+          <td class="p-3">{{ officer.rank }}</td>
+
+          <!-- Badge No. -->
+          <td class="p-3">{{ officer.badge_number }}</td>
+
+          <!-- Station -->
+          <td class="p-3">{{ officer.department }}</td>
+
+          <!-- On Duty -->
+          <td class="p-3 text-center">
+            {% if officer.on_duty %}
+            <span class="text-green-600 font-semibold">Yes</span>
+            {% else %}
+            <span class="text-red-600 font-semibold">No</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-gray-500 py-4">No officers added yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const toggleBtn = document.getElementById("toggleFormBtn");
+  const formDiv = document.getElementById("officerForm");
+  const closeFormBtn = document.getElementById("closeFormBtn");
+
+  toggleBtn.addEventListener("click", () => {
+    formDiv.classList.remove("hidden");
+  });
+
+  closeFormBtn.addEventListener("click", () => {
+    formDiv.classList.add("hidden");
+  });
+
+  // Close form if clicked outside modal
+  window.addEventListener("click", (e) => {
+    if (e.target === formDiv) {
+      formDiv.classList.add("hidden");
+    }
+  });
+</script>
+
+{% endblock %}

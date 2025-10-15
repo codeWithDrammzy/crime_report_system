@@ -1,0 +1,106 @@
+{% extends "crime_app/officerPage/main.html" %}
+{% block content %}
+
+<!-- Officer Header -->
+<div class="flex justify-between items-center mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-gray-800">Branch: <span class="text-blue-700">{{user.officer.department}}</span></h1>
+  </div>
+  <button class="bg-blue-700 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-800 transition">
+    View All Reports
+  </button>
+</div>
+
+<!-- Stat Cards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-600">
+    <h3 class="text-gray-500 text-sm">Assigned Cases</h3>
+    <p class="text-3xl font-bold text-blue-800 mt-2">24</p>
+    <p class="text-xs text-gray-400 mt-1">2 new this week</p>
+  </div>
+  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-600">
+    <h3 class="text-gray-500 text-sm">Completed Cases</h3>
+    <p class="text-3xl font-bold text-green-700 mt-2">15</p>
+    <p class="text-xs text-gray-400 mt-1">+3 this month</p>
+  </div>
+  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+    <h3 class="text-gray-500 text-sm">Pending Reports</h3>
+    <p class="text-3xl font-bold text-yellow-600 mt-2">7</p>
+    <p class="text-xs text-gray-400 mt-1">Awaiting review</p>
+  </div>
+  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-600">
+    <h3 class="text-gray-500 text-sm">Alerts</h3>
+    <p class="text-3xl font-bold text-red-600 mt-2">2</p>
+    <p class="text-xs text-gray-400 mt-1">Critical issues</p>
+  </div>
+</section>
+
+<!-- Charts/Performance Summary -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">Performance Overview</h2>
+    <div class="h-64 flex items-center justify-center text-gray-400">
+      📈 <span class="ml-2">Chart Placeholder</span>
+    </div>
+  </div>
+
+  <div class="bg-white p-6 rounded-lg shadow-md">
+    <h2 class="text-lg font-semibold text-gray-700 mb-4">Incident Response Time</h2>
+    <div class="h-64 flex items-center justify-center text-gray-400">
+      ⏱️ <span class="ml-2">Chart Placeholder</span>
+    </div>
+  </div>
+</section>
+
+<!-- Recent Assigned Reports -->
+<section class="bg-white p-6 rounded-lg shadow-md mt-8">
+  <h2 class="text-lg font-semibold text-gray-700 mb-4">Recent Assigned Reports</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full text-left border-collapse text-sm">
+      <thead class="bg-blue-800 text-white">
+        <tr>
+          <th class="px-4 py-2">Report ID</th>
+          <th class="px-4 py-2">Crime Type</th>
+          <th class="px-4 py-2">Location</th>
+          <th class="px-4 py-2">Status</th>
+          <th class="px-4 py-2">Date Assigned</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2 font-semibold text-blue-700">CR-2041</td>
+          <td class="px-4 py-2">Burglary</td>
+          <td class="px-4 py-2">Kano City</td>
+          <td class="px-4 py-2 text-green-600 font-semibold">Completed</td>
+          <td class="px-4 py-2 text-gray-500">Oct 6, 2025</td>
+        </tr>
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-4 py-2 font-semibold text-blue-700">CR-2042</td>
+          <td class="px-4 py-2">Fraud</td>
+          <td class="px-4 py-2">Abuja</td>
+          <td class="px-4 py-2 text-yellow-500 font-semibold">Pending</td>
+          <td class="px-4 py-2 text-gray-500">Oct 5, 2025</td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-2 font-semibold text-blue-700">CR-2043</td>
+          <td class="px-4 py-2">Theft</td>
+          <td class="px-4 py-2">Kaduna</td>
+          <td class="px-4 py-2 text-blue-600 font-semibold">In Progress</td>
+          <td class="px-4 py-2 text-gray-500">Oct 4, 2025</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Notification Section -->
+<section class="mt-8 bg-white p-6 rounded-lg shadow-md">
+  <h2 class="text-lg font-semibold text-gray-700 mb-3">Notifications</h2>
+  <ul class="space-y-3 text-sm text-gray-600">
+    <li class="border-l-4 border-blue-600 pl-3">🚨 New case assigned: CR-2044 (Robbery)</li>
+    <li class="border-l-4 border-yellow-500 pl-3">⚠️ Pending update required for CR-2035</li>
+    <li class="border-l-4 border-green-600 pl-3">✅ Case CR-2028 successfully resolved</li>
+  </ul>
+</section>
+
+{% endblock %}

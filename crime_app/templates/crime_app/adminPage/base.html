@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | QuickReport Nigeria</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Top Navigation -->
+  <header class="bg-blue-900 text-white px-6 py-4 flex justify-between items-center shadow-lg">
+    <div class="flex items-center gap-3">
+      <h1 class="text-2xl font-bold text-yellow-400">
+        <a href="{% url 'dashboard'%}">QuickReport Nigeria
+      </a> </h1>
+      
+    </div>
+
+    <!-- Search + Profile -->
+    <div class="flex items-center gap-4">
+      <div class="relative">
+        <input type="text" placeholder="Search..."
+               class="bg-blue-800 text-sm px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100">
+        <span class="absolute right-3 top-2 text-gray-400">🔍</span>
+      </div>
+      <button class="bg-yellow-400 text-blue-900 px-3 py-2 rounded-md font-semibold hover:bg-yellow-300 transition">
+        Notifications 🔔
+      </button>
+      <img src="{% static 'images/police.jpg' %}" class="w-10 h-10 rounded-full border-2 border-yellow-400" alt="Admin" id="profileBtn" />
+      
+        <!-- Dropdown Menu -->
+        <div
+          id="dropdownMenu"
+          class="hidden absolute right-0 mt-40 w-40 bg-blue-400 border  border-gray-200 rounded-lg shadow-lg z-50">
+          <a
+            href="" class="block px-4 py-2 text-white hover:bg-yellow-100 hover:text-blue-900 transition">
+            👤 Profile
+          </a>
+          <a
+            href="{% url 'logout' %}" class="block px-4 py-2 text-white hover:bg-yellow-100 hover:text-blue-900 transition" >
+            🚪 Logout
+          </a>
+        </div>
+    </div>
+  </header>
+
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap justify-between items-center bg-white p-4 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold text-gray-700">Admin |<a href="{%url 'dashboard'%}"><span class="font-bold text-blue-500"> Dashboard</span></a></h2>
+      <div class="flex gap-3">
+        <a href="{%url 'department' %}" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-500 transition">
+      <i data-lucide="building-2"></i>
+      Police Department
+    </a>
+       <a href="{% url 'officer-list' %}" 
+        id="addOfficerBtn" 
+        class="bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"> <i data-lucide="police"></i> Officer
+      </a>
+        <button class="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-400 transition">
+          👥 Manage Users
+        </button>
+      </div>
+    </div>
+
+  <main class="p-6 space-y-8 mx-12 ">
+    {%block content%}
+    {% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-gray-500 py-6 text-sm border-t mt-10">
+    &copy; 2025 QuickReport Nigeria | All Rights Reserved.
+  </footer>
+
+  
+  
+<script src="{% static 'js/app.js' %}"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+  lucide.createIcons();
+</script>
+</body>
+</html>

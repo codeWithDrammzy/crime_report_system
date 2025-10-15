@@ -1,0 +1,110 @@
+{% extends "crime_app/adminPage/base.html" %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg p-6">
+  <!-- Page Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">🚓 Police Departments</h2>
+    <button id="toggleFormBtn"
+      class="bg-blue-700 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-200">
+      ➕ Add Department
+    </button>
+  </div>
+
+  <!-- Add Department Modal -->
+  <div id="departmentForm"
+    class="hidden fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 transition-opacity">
+    <div
+      class="bg-white p-8 rounded-2xl shadow-2xl border border-gray-200 w-full max-w-lg transform transition-all scale-95 hover:scale-100 relative">
+      <!-- Close Button -->
+      <button id="closeFormBtn"
+        class="absolute top-3 right-3 text-gray-600 hover:text-red-500 text-2xl focus:outline-none">
+        &times;
+      </button>
+
+      <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Add New Department</h2>
+
+      <!-- Add Department Form -->
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        {{ form|crispy }}
+        <div class="flex justify-end pt-3">
+          <button type="submit"
+            class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-500 transition duration-200">
+            💾 Save Department
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success Messages -->
+  {% if messages %}
+  <div class="mt-4">
+    {% for message in messages %}
+    <p class="text-green-600 text-center font-semibold">{{ message }}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Department Table -->
+  <div class="overflow-x-auto mt-6">
+    <table class="w-full border border-gray-200 rounded-lg">
+      <thead class="bg-gray-100 border-b border-gray-300">
+        <tr>
+          <th class="text-left p-3">Department Name</th>
+          <th class="text-left p-3">Location</th>
+          <th class="text-center p-3">Authorized Officers</th>
+          <th class="text-center p-3">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dep in departments %}
+        <tr class="border-b hover:bg-gray-50 transition duration-150">
+          <td class="p-3 font-semibold text-gray-700">{{ dep.name }}</td>
+          <td class="p-3">{{ dep.location|title }}</td>
+          <td class="p-3 text-center font-medium text-blue-700">{{ dep.officer_count }}</td>
+          <td class="p-3 text-center">
+            {% if dep.is_active %}
+            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">Active</span>
+            {% else %}
+            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">Suspended</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" class="text-center text-gray-500 py-4 italic">No departments added yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Script -->
+<script>
+  const toggleBtn = document.getElementById("toggleFormBtn");
+  const formDiv = document.getElementById("departmentForm");
+  const closeFormBtn = document.getElementById("closeFormBtn");
+
+  // Open modal
+  toggleBtn.addEventListener("click", () => {
+    formDiv.classList.remove("hidden");
+  });
+
+  // Close modal
+  closeFormBtn.addEventListener("click", () => {
+    formDiv.classList.add("hidden");
+  });
+
+  // Close modal when clicking outside
+  window.addEventListener("click", (e) => {
+    if (e.target === formDiv) {
+      formDiv.classList.add("hidden");
+    }
+  });
+</script>
+{% endblock %}

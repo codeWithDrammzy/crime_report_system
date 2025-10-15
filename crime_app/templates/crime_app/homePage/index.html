@@ -1,0 +1,103 @@
+  {% load static %}
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuickReport Nigeria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-sans">
+
+    <!-- SPLASH SCREEN -->
+    <div id="splash"
+      class="fixed inset-0 flex items-center justify-center bg-primary text-white text-4xl font-bold transition-opacity duration-1000 opacity-100">
+
+      
+      <!-- Fullscreen Background Image -->
+      <img src="{% static 'images/police.jpg' %}" 
+          alt="Police Background"
+          class="absolute inset-0 w-full h-full object-cover">
+
+      <!-- Dark Overlay -->
+      <div class="absolute inset-0 bg-blue-900/80"></div>
+
+      <!-- Centered Content -->
+      <div class="relative z-10 flex flex-col justify-center items-center text-center space-y-6">
+        <!-- Circular Loader with Eye -->
+        <div class="relative">
+          <div class="w-24 h-24 border-8 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+          <h1 class="absolute inset-0 flex justify-center items-center text-4xl font-bold text-yellow-400">
+            👁️
+          </h1>
+        </div>
+
+        <!-- Text -->
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-wide text-yellow-400">
+          Eye on Kaduna
+        </h1>
+        <p class="text-gray-200 text-sm md:text-base">
+          Powered by QuickReport Nigeria
+        </p>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main" class="hidden">
+      <!-- Navbar -->
+      <nav class="bg-blue-900 text-white shadow-md px-6 py-4 flex justify-between items-center">
+        <!-- Left -->
+        <div>
+          <h1 class="text-2xl font-bold leading-tight text-yellow-400">
+            QuickReport Nigeria
+          </h1>
+          <p class="text-xs text-gray-200">Nigeria Police Force</p>
+        </div>
+
+        <!-- Right -->
+        <div>
+          <a href="{% url 'my-login' %}" class="bg-yellow-400 text-blue-900 px-5 py-2 rounded-md text-sm font-semibold hover:bg-yellow-300 transition">
+            Login
+          </a>
+        </div>
+      </nav>
+
+      <!-- Hero Section -->
+      <section class="relative mt-10">
+        <img src="{% static 'images/police.jpg' %}" alt="Police"
+            class="w-full h-[70vh] object-cover rounded-lg shadow-lg opacity-90">
+
+        <div class="absolute inset-0 bg-blue-900/70 flex flex-col justify-center items-center text-white px-6">
+          <h2 class="text-4xl font-bold mb-4 text-yellow-400">Online Crime Reporting System</h2>
+          <p class="max-w-2xl text-center text-gray-200 text-sm md:text-base">
+            A modern platform enabling citizens to report crimes securely and directly to the Nigerian Police Force.
+            Bridging the gap between the public and law enforcement for a safer Nigeria.
+          </p>
+          <div class="mt-8">
+            <a href="#" class="bg-yellow-400 text-blue-900 px-8 py-3 rounded-lg text-lg font-semibold hover:bg-yellow-300 transition shadow-lg">
+              Report a Crime
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="mt-24 text-center bg-blue-900 text-white text-sm py-6 border-t">
+        &copy; 2025 QuickReport Nigeria. All Rights Reserved.
+      </footer>
+    </div>
+
+    <!-- JS -->
+    <script src="{% static 'js/app.js' %}"></script>
+
+    <style>
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 1s ease-out forwards;
+      }
+    </style>
+  </body>
+  </html>
