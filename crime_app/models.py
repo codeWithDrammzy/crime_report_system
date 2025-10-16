@@ -61,6 +61,7 @@ class CrimeReport(models.Model):
         ('Pending', 'Pending'),
         ('Investigating', 'Investigating'),
         ('Resolved', 'Resolved'),
+        ('Dismissed', 'Dismissed')
     )
 
     INCIDENT_TYPES = [

@@ -11,10 +11,16 @@ urlpatterns = [
     path("dashboard" , views.dashboard, name="dashboard"),
     path("department" , views.department_list, name="department"),
     path('officer-list', views.officer_list, name='officer-list'),
+    path ('reported-crime', views.reported_crime, name="reported-crime"),
+    path('crime-detail/<int:pk>', views.crime_detail, name="crime-detail"),
+    path('crime-detail/<int:pk>/', views.crime_detail, name='crime-detail'),
+    path('update-report-status/<int:pk>/', views.update_report_status, name='update-report-status'),
+
 
     # ========= officer ========
     path('officer-board/', views.officer_board, name='officer-board'),
     path('add-report/', views.add_report, name='add-report'),
     path('report-detail/<int:pk>', views.report_detail, name="report-detail"),
+    path('update-status/<int:pk>/', views.update_status, name='update-status'),
     
 ]

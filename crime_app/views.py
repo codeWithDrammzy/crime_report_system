@@ -1,4 +1,4 @@
-from django.shortcuts import render, HttpResponse, redirect
+from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
 from .forms import *
 from django.contrib.auth import authenticate, login, logout
 from .models import *
@@ -50,7 +50,6 @@ def dashboard(request):
     pending_reports = CrimeReport.objects.filter(status='Pending').count()
     total_departments = Department.objects.count()
 
-    # Get 5 most recent reports (if any)
     recent_reports = CrimeReport.objects.select_related('reporter').order_by('-date_reported')[:5]
 
     context = {
@@ -92,9 +91,57 @@ def department_list(request):
     }
     return render(request, 'crime_app/adminPage/department.html', context)
 
+def reported_crime(request):
+    reports = CrimeReport.objects.all().order_by('-date_reported')
+    context = {'reports': reports}
+    return render( request, 'crime_app/adminPage/reported-crime.html',context)
+
+def crime_detail(request, pk):
+    report = CrimeReport.objects.get( id=pk )
+    context = {'report':report}
+    return render( request, 'crime_app/adminPage/crime-detail.html', context)
+
+def crime_detail(request, pk):
+    report = get_object_or_404(CrimeReport, id=pk)
+    departments = Department.objects.all()
+    return render(request, 'crime_app/adminPage/crime-detail.html', {
+        'report': report,
+        'departments': departments
+    })
+
+def update_report_status(request, pk):
+    report = get_object_or_404(CrimeReport, id=pk)
+    if request.method == 'POST':
+        report.status = request.POST.get('status')
+        dept_id = request.POST.get('department')
+        if dept_id:
+            report.department_id = dept_id
+        report.save()
+        return redirect('crime-detail', pk=report.id)
+
+
+
+
+
 # ============ Officer page ========
 def officer_board(request):
-    return render(request , 'crime_app/officerPage/officer-board.html')
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    officer_dept = request.user.officer.department
+    reports = CrimeReport.objects.filter(department=officer_dept)
+
+    context = {
+        'total_reports': reports.count(),
+        'resolved_cases': reports.filter(status='Resolved').count(),
+        'pending_cases': reports.filter(status='Pending').count(),
+        'dismissed_cases': reports.filter(status='Dismissed').count(),
+        'recent_reports': reports.order_by('-date_reported')[:8],
+        'new_reports': reports.order_by('-date_reported')[:3],
+    }
+
+    return render(request, 'crime_app/officerPage/officer-board.html', context)
 
 
 
@@ -104,25 +151,33 @@ def add_report(request):
         if form.is_valid():
             report = form.save(commit=False)
 
-            # ✅ Attach evidence files (from form or JS)
+            # ✅ Attach evidence files
             report.evidence_image = request.FILES.get('photo_file') or request.FILES.get('evidence_image')
             report.evidence_audio = request.FILES.get('audio_file') or request.FILES.get('evidence_audio')
             report.evidence_video = request.FILES.get('video_file') or request.FILES.get('evidence_video')
 
-            # ✅ Assign department automatically if officer
-            if hasattr(request.user, 'officer'):
-                report.department = request.user.officer.department
-
-            # ✅ Attach reporter (citizen/officer)
+            # ✅ Assign reporter (citizen/officer)
             if request.user.is_authenticated:
                 report.reporter = request.user
+
+            # ✅ If the officer is reporting, link it to their department
+            if hasattr(request.user, 'officer'):
+                report.department = request.user.officer.department
 
             report.save()
             return redirect('officer-board')
     else:
         form = CrimeReportForm()
 
-    reports = CrimeReport.objects.all().order_by('-date_reported')
+    # ✅ Officers should only see reports sent *to their department*
+    if hasattr(request.user, 'officer'):
+        reports = CrimeReport.objects.filter(
+            department=request.user.officer.department
+        ).order_by('-date_reported')
+    else:
+        # Regular users or admins see all or just their own (optional)
+        reports = CrimeReport.objects.all().order_by('-date_reported')
+
     return render(request, 'crime_app/officerPage/add-report.html', {
         'form': form,
         'reports': reports
@@ -134,3 +189,24 @@ def report_detail(request, pk):
 
     context ={'crime':crime}
     return render(request , 'crime_app/officerPage/report-detail.html', context)
+
+def update_status(request, pk):
+    report = get_object_or_404(CrimeReport, id=pk)
+
+    # ✅ Only allow updates for officers in the same department
+    if hasattr(request.user, 'officer'):
+        officer_dept = request.user.officer.department
+        if report.department != officer_dept:
+            messages.error(request, "You can only update reports in your department.")
+            return redirect('report-detail', pk=report.id)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status:
+            report.status = new_status
+            report.save()
+            messages.success(request, f"Report status updated to {new_status}.")
+        else:
+            messages.error(request, "Please select a valid status.")
+
+    return redirect('report-detail', pk=report.id)

@@ -1,0 +1,76 @@
+{% extends "crime_app/adminPage/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="bg-white p-6 rounded-2xl shadow-md border border-gray-200">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-700">📋 Crime Reports</h1>
+    <span class="text-sm text-gray-500">Total: {{ reports.count }}</span>
+  </div>
+
+  <!-- Reports Table -->
+  <div class="overflow-x-auto">
+    <table class="min-w-full border-collapse">
+      <thead>
+        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+          <th class="py-3 px-6 text-left">Crime Id</th>
+          <th class="py-3 px-6 text-left">Reporter</th>
+          <th class="py-3 px-6 text-left">Crime Type</th>
+          <th class="py-3 px-6 text-left">Location</th>
+          <th class="py-3 px-6 text-left">Status</th>
+          <th class="py-3 px-6 text-center">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="text-gray-700">
+        {% for crime in reports %}
+        <tr class="border-b hover:bg-gray-50 transition">
+          <td class="py-3 px-6 font-bold">{{ crime.report_id }}</td>
+          <td class="py-3 px-6">
+          {% if crime.reporter.officer.profile_picture %}
+                <img src="{{ crime.reporter.officer.profile_picture.url }}" 
+                    alt="Officer Photo" 
+                    class="w-9 h-9 rounded-full border-2 border-yellow-400 object-cover">
+            {% else %}
+                <img src="{% static 'images/dummy_user.png' %}" 
+                    alt="Officer" 
+                    class="w-9 h-9 rounded-full border-2 border-yellow-400">
+            {% endif %}
+            {% if crime.reporter %}
+              {{ crime.reporter.get_full_name }}
+            {% else %}
+              <span class="text-gray-400 italic">Anonymous</span>
+            {% endif %}
+          </td>
+          <td class="py-3 px-6">{{ crime.incident_type|title }}</td>
+          <td class="py-3 px-6">{{ crime.location|default:"Not provided" }}</td>
+          <td class="py-3 px-6">
+            {% if crime.status == "Pending" %}
+              <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-2 py-1 rounded-full">Pending</span>
+            {% elif crime.status == "Resolved" %}
+              <span class="bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded-full">Resolved</span>
+            {% else %}
+              <span class="bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-1 rounded-full">{{ crime.status }}</span>
+            {% endif %}
+          </td>
+           <td class="py-3 px-6 text-center flex items-center justify-center space-x-3">
+            <a href="{%url 'crime-detail' crime.id%}" 
+               class="text-blue-600 hover:text-blue-800 text-sm font-semibold">View</a>
+            {% comment %} <a href="" 
+               class="text-red-600 hover:text-red-800 text-sm font-semibold"
+               onclick="return confirm('Are you sure you want to delete this report?')">Delete</a> {% endcomment %}
+          </td> 
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-6 text-gray-400">
+            No reports found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

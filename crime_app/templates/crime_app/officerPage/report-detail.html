@@ -9,9 +9,9 @@
         <h2 class="text-2xl font-semibold text-gray-800">
             🕵️ Report Details — {{ crime.title }}
         </h2>
-        <a href="{% url 'add-report' %}" 
+        <a href="{{ request.META.HTTP_REFERER }}" 
            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-           ← Back to Reports
+           ← Back
         </a>
     </div>
 
@@ -20,21 +20,22 @@
         <h3 class="text-lg font-semibold text-blue-800 mb-3">Reporter Information</h3>
         {% if crime.reporter %}
         <ul class="text-gray-700 space-y-1 flex justify-between">
-            
             <div>
-                {% if user.crime.profile_picture %}
-                    <img src="{{ user.reporter.profile_picture.url }}" alt="Officer Photo" class="w-9 h-9 rounded-full border-2 border-yellow-400 object-cover">
+                {% if crime.reporter.officer.profile_picture %}
+                    <img src="{{ crime.reporter.officer.profile_picture.url }}" 
+                        alt="Officer Photo" 
+                        class="w-9 h-9 rounded-full border-2 border-yellow-400 object-cover">
                 {% else %}
-                    <img src="{% static 'images/dummy_user.png' %}" alt="Officer" class="w-9 h-9 rounded-full border-2 border-yellow-400">
+                    <img src="{% static 'images/dummy_user.png' %}" 
+                        alt="Officer" 
+                        class="w-9 h-9 rounded-full border-2 border-yellow-400">
                 {% endif %}
                 <li><strong>Name:</strong> {{ crime.reporter.get_full_name|default:crime.reporter.username }}</li>
             </div>
-             <div> 
-                
+            <div> 
                 <li><strong>Email:</strong> {{ crime.reporter.email|default:"Not provided" }}</li>
                 <li><strong>Phone:</strong> {{ crime.reporter.phone|default:"Not provided" }}</li>
-             </div>
-            
+            </div>
         </ul>
         {% else %}
         <p class="italic text-gray-500">Anonymous Reporter</p>
@@ -51,26 +52,53 @@
                 <li><strong>Location:</strong> {{ crime.location }}</li>
             </div>
             <div>            
-            <li><strong>Incident Type:</strong> {{ crime.incident_type|default:"—" }}</li>
-            <li><strong>Department:</strong> {{ crime.department.name|default:"—" }}</li>
-            <li><strong>Status:</strong>
-                {% if crime.status == 'Pending' %}
-                    <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Pending</span>
-                {% elif crime.status == 'Investigating' %}
-                    <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Investigating</span>
-                {% elif crime.status == 'Resolved' %}
-                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Resolved</span>
-                {% endif %}
-            </li>
-            <li><strong>Date Reported:</strong> {{ crime.date_reported|date:"M d, Y - h:i A" }}</li>
-             </div>
+                <li><strong>Incident Type:</strong> {{ crime.incident_type|default:"—" }}</li>
+                <li><strong>Department:</strong> {{ crime.department.name|default:"—" }}</li>
+                <li><strong>Status:</strong>
+                    {% if crime.status == 'Pending' %}
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">Pending</span>
+                    {% elif crime.status == 'Investigating' %}
+                        <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Investigating</span>
+                    {% elif crime.status == 'Resolved' %}
+                        <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Resolved</span>
+                    {% elif crime.status == 'Dismissed' %}
+                        <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">Dismissed</span>
+                    {% endif %}
+                </li>
+                <li><strong>Date Reported:</strong> {{ crime.date_reported|date:"M d, Y - h:i A" }}</li>
+            </div>
         </ul>
+
+        <!-- ✅ Officer Control: Update Status -->
+        {% if request.user.is_authenticated and request.user.officer.department == crime.department %}
+            {% if crime.status == 'Resolved' or crime.status == 'Dismissed' %}
+                <p class="mt-6 text-gray-500 italic">
+                    ✅ This report has been <strong>{{ crime.status }}</strong>. Status updates are disabled.
+                </p>
+            {% else %}
+                <form method="POST" action="{% url 'update-status' crime.id %}" class="mt-6 flex items-center space-x-4">
+                    {% csrf_token %}
+                    <label for="status" class="font-medium text-gray-700">Update Status:</label>
+                    <select name="status" id="status" 
+                        class="border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-blue-200 focus:border-blue-400">
+                        <option value="Pending" {% if crime.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Investigating" {% if crime.status == 'Investigating' %}selected{% endif %}>Investigating</option>
+                        <option value="Resolved" {% if crime.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                        <option value="Dismissed" {% if crime.status == 'Dismissed' %}selected{% endif %}>Dismissed</option>
+                    </select>
+
+                    <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow">
+                        💾 Save
+                    </button>
+                </form>
+            {% endif %}
+        {% endif %}
     </div>
 
     <!-- Evidence Section -->
     <div class="border-l-4 border-green-500 bg-green-50 rounded-xl p-6">
         <h3 class="text-lg font-semibold text-green-800 mb-3">Evidence</h3>
-
         <div class="grid md:grid-cols-3 gap-6">
             {% if crime.evidence_image %}
             <div>
@@ -79,23 +107,19 @@
                      class="rounded-xl border shadow-sm w-full">
             </div>
             {% endif %}
-
             {% if crime.evidence_video %}
             <div>
                 <h4 class="font-medium text-gray-700 mb-2">🎥 Video Evidence</h4>
                 <video controls class="rounded-xl border shadow-sm w-full">
                     <source src="{{ crime.evidence_video.url }}" type="video/mp4">
-                    Your browser does not support video playback.
                 </video>
             </div>
             {% endif %}
-
             {% if crime.evidence_audio %}
             <div>
                 <h4 class="font-medium text-gray-700 mb-2">🎤 Audio Evidence</h4>
                 <audio controls class="w-full">
                     <source src="{{ crime.evidence_audio.url }}" type="audio/mpeg">
-                    Your browser does not support audio playback.
                 </audio>
             </div>
             {% endif %}
