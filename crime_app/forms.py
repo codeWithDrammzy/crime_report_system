@@ -54,7 +54,16 @@ class DepartmentForm(forms.ModelForm):
         model = Department
         fields = '__all__'
         exclude =['is_active']
-        
+
+class CrimeSearchForm(forms.Form):
+    q = forms.CharField(
+        required=False,
+        label='',
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Search by report ID, department, location, status, or type',
+            'class': 'bg-blue-800 text-sm px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100 w-full pr-10'
+        })
+    )     
 
 class CrimeReportForm(forms.ModelForm):
     class Meta:

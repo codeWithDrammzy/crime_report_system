@@ -16,17 +16,16 @@
     <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
 
       <!-- Logo / Brand -->
-     <div class="flex items-center space-x-2">
+      <div class="flex items-center space-x-2">
         <h1 class="text-2xl text-yellow-400 font-bold tracking-wide">
           <a href="{% url 'officer-board' %}">QuickReport Officer</a>
         </h1>
       </div>
 
-
       <!-- Search bar -->
       <div class="relative">
         <input type="text" placeholder="Search..."
-               class="bg-blue-800  px-28 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100">
+          class="bg-blue-800 px-28 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100">
         <span class="absolute right-3 top-2 text-gray-400">🔍</span>
       </div>
 
@@ -45,39 +44,50 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C8.67 6.165 8 7.388 8 8.75V14l-1.405 1.405A1.992 1.992 0 016 17h9z" />
             </svg>
-            <span class="absolute top-0 right-0 bg-red-600 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center">3</span>
+            {% if unread_count > 0 %}
+              <span id="notificationCount" class="absolute top-0 right-0 bg-red-600 text-xs text-white rounded-full w-4 h-4 flex items-center justify-center">
+                {{ unread_count }}
+              </span>
+            {% endif %}
           </button>
 
           <!-- Notifications Dropdown -->
           <div id="notifyMenu" class="absolute right-0 mt-3 w-72 bg-white text-gray-700 rounded-md shadow-lg hidden">
-            <div class="p-3 border-b font-semibold text-gray-800">Notifications</div>
-            <ul class="max-h-60 overflow-y-auto">
-              <li class="px-4 py-2 hover:bg-gray-50 text-sm">🚨 New report assigned to you.</li>
-              <li class="px-4 py-2 hover:bg-gray-50 text-sm">✅ Case CR-2031 marked as resolved.</li>
-              <li class="px-4 py-2 hover:bg-gray-50 text-sm">⚠️ Report CR-2042 pending update.</li>
-            </ul>
-            <div class="text-center text-blue-600 py-2 hover:bg-gray-100 cursor-pointer text-sm font-medium">
-              View All
+            <div class="p-3 border-b font-semibold text-gray-800 flex justify-between items-center">
+              Notifications
+              {% if unread_count > 0 %}
+                <button id="markAllBtn" class="text-sm text-blue-600 hover:underline">Mark all as read</button>
+              {% endif %}
             </div>
+            <ul class="max-h-60 overflow-y-auto divide-y divide-gray-100">
+              {% if recent_notifications %}
+                {% for note in recent_notifications %}
+                  <li class="px-4 py-2 hover:bg-gray-50 text-sm {% if not note.is_read %}font-semibold{% endif %}">
+                    {{ note.message }} <br>
+                    <span class="text-xs text-gray-400">{{ note.created_at|date:"M d, Y H:i" }}</span>
+                  </li>
+                {% endfor %}
+              {% else %}
+                <li class="text-center text-gray-400 py-4 text-sm">No new notifications</li>
+              {% endif %}
+            </ul>
           </div>
         </div>
 
         <!-- Profile Dropdown -->
         <div class="relative">
           <button id="profileBtn" class="flex items-center space-x-2 focus:outline-none">
-  <span class="hidden md:inline font-semibold">{{ user.last_name|upper }}</span>
-  
-  {% if user.officer.profile_picture %}
-    <img src="{{ user.officer.profile_picture.url }}" alt="Officer Photo" class="w-9 h-9 rounded-full border-2 border-yellow-400 object-cover">
-  {% else %}
-    <img src="{% static 'images/avatar.png' %}" alt="Officer" class="w-9 h-9 rounded-full border-2 border-yellow-400">
-  {% endif %}
-  
-  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-    <path d="M19 9l-7 7-7-7"></path>
-  </svg>
-</button>
-
+            <span class="hidden md:inline font-semibold">{{ user.last_name|upper }}</span>
+            {% if user.officer.profile_picture %}
+              <img src="{{ user.officer.profile_picture.url }}" alt="Officer Photo"
+                class="w-9 h-9 rounded-full border-2 border-yellow-400 object-cover">
+            {% else %}
+              <img src="{% static 'images/avatar.png' %}" alt="Officer" class="w-9 h-9 rounded-full border-2 border-yellow-400">
+            {% endif %}
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
 
           <!-- Dropdown Menu -->
           <div id="dropdownMenu" class="absolute right-0 mt-3 w-48 bg-white text-gray-700 rounded-md shadow-lg hidden">
@@ -125,16 +135,61 @@
     const dropdownMenu = document.getElementById('dropdownMenu');
     const notifyBtn = document.getElementById('notifyBtn');
     const notifyMenu = document.getElementById('notifyMenu');
+    const badge = document.getElementById('notificationCount');
+    const markAllBtn = document.getElementById('markAllBtn');
 
     menuBtn?.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
     profileBtn?.addEventListener('click', () => dropdownMenu.classList.toggle('hidden'));
-    notifyBtn?.addEventListener('click', () => notifyMenu.classList.toggle('hidden'));
+    notifyBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      notifyMenu.classList.toggle('hidden');
 
+      // Mark all as read when opened
+      fetch("{% url 'mark-notifications-read' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success' && badge) {
+          badge.style.display = 'none';
+          document.querySelectorAll('#notifyMenu li.font-semibold').forEach(li => {
+            li.classList.remove('font-semibold');
+            li.classList.add('text-gray-500', 'transition', 'duration-300');
+          });
+        }
+      });
+    });
+
+    // Mark all button
+    markAllBtn?.addEventListener('click', (e) => {
+      e.preventDefault();
+      fetch("{% url 'mark-notifications-read' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' && badge) {
+          badge.style.display = 'none';
+          document.querySelectorAll('#notifyMenu li.font-semibold').forEach(li => {
+            li.classList.remove('font-semibold');
+          });
+        }
+      });
+    });
+
+    // Close dropdowns when clicking outside
     document.addEventListener('click', (e) => {
       if (!profileBtn.contains(e.target)) dropdownMenu.classList.add('hidden');
       if (!notifyBtn.contains(e.target)) notifyMenu.classList.add('hidden');
     });
   </script>
-
 </body>
 </html>

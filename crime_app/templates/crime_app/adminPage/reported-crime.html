@@ -14,10 +14,11 @@
     <table class="min-w-full border-collapse">
       <thead>
         <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-          <th class="py-3 px-6 text-left">Crime Id</th>
           <th class="py-3 px-6 text-left">Reporter</th>
+          <th class="py-3 px-6 text-left">Crime Id</th>
+          
           <th class="py-3 px-6 text-left">Crime Type</th>
-          <th class="py-3 px-6 text-left">Location</th>
+          <th class="py-3 px-6 text-left">Department</th>
           <th class="py-3 px-6 text-left">Status</th>
           <th class="py-3 px-6 text-center">Actions</th>
         </tr>
@@ -25,9 +26,8 @@
       <tbody class="text-gray-700">
         {% for crime in reports %}
         <tr class="border-b hover:bg-gray-50 transition">
-          <td class="py-3 px-6 font-bold">{{ crime.report_id }}</td>
           <td class="py-3 px-6">
-          {% if crime.reporter.officer.profile_picture %}
+           {% if crime.reporter.officer.profile_picture %}
                 <img src="{{ crime.reporter.officer.profile_picture.url }}" 
                     alt="Officer Photo" 
                     class="w-9 h-9 rounded-full border-2 border-yellow-400 object-cover">
@@ -42,8 +42,9 @@
               <span class="text-gray-400 italic">Anonymous</span>
             {% endif %}
           </td>
+          <td class="py-3 px-6 font-bold">{{ crime.report_id }}</td>
           <td class="py-3 px-6">{{ crime.incident_type|title }}</td>
-          <td class="py-3 px-6">{{ crime.location|default:"Not provided" }}</td>
+          <td class="py-3 px-6">{{ crime.department.name|default:"Not provided" }}</td>
           <td class="py-3 px-6">
             {% if crime.status == "Pending" %}
               <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-2 py-1 rounded-full">Pending</span>

@@ -15,6 +15,7 @@ urlpatterns = [
     path('crime-detail/<int:pk>', views.crime_detail, name="crime-detail"),
     path('crime-detail/<int:pk>/', views.crime_detail, name='crime-detail'),
     path('update-report-status/<int:pk>/', views.update_report_status, name='update-report-status'),
+    path('search-crime', views.search_crime, name="search-crime"),
 
 
     # ========= officer ========
@@ -22,5 +23,7 @@ urlpatterns = [
     path('add-report/', views.add_report, name='add-report'),
     path('report-detail/<int:pk>', views.report_detail, name="report-detail"),
     path('update-status/<int:pk>/', views.update_status, name='update-status'),
+    path('mark-notifications-read/', views.mark_notifications_read, name='mark-notifications-read'),
+
     
 ]

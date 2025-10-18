@@ -1,0 +1,43 @@
+{% extends 'crime_app/adminPage/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6">Search Result</h1>
+
+    {% if results %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border rounded shadow">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="py-2 px-4 border">Report ID</th>
+                        <th class="py-2 px-4 border">Department</th>
+                        <th class="py-2 px-4 border">Location</th>
+                        <th class="py-2 px-4 border">Status</th>
+                        <th class="py-2 px-4 border">Incident Type</th>
+                        <th class="py-2 px-4 border">Action</th>
+                    </tr>
+                </thead>
+                <tbody  class="text-center">
+                    {% for crime in results %}
+                        <tr class="hover:bg-gray-100">
+                            <td class="py-2 px-4 border">{{ crime.report_id }}</td>
+                            <td class="py-2 px-4 border">{{ crime.department }}</td>
+                            <td class="py-2 px-4 border">{{ crime.location }}</td>
+                            <td class="py-2 px-4 border">{{ crime.status }}</td>
+                            <td class="py-2 px-4 border">{{ crime.incident_type }}</td>
+                            <td class="py-2 px-4 border text-blue-500"> <a href="{%url 'crime-detail' crime.id%}">View</a> </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        {% if query %}
+            <p class="text-red-500 mt-4">No results found for "<strong>{{ query }}</strong>".</p>
+        {% else %}
+            <p class="text-gray-500 mt-4">Enter a search query to find crime reports.</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}
