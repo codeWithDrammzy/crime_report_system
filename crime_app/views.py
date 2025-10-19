@@ -234,6 +234,38 @@ def update_status(request, pk):
     return redirect('report-detail', pk=report.id)
 
 
+# ===================== SEARCH CRIME (OFFICER) =====================
+def search_report(request):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    officer = request.user.officer
+    officer_dept = officer.department
+
+    query = request.GET.get('q', '')
+    results = []
+
+    if query:
+        results = CrimeReport.objects.filter(
+            Q(department=officer_dept) & (
+                Q(report_id__icontains=query) |
+                Q(location__icontains=query) |
+                Q(status__icontains=query) |
+                Q(incident_type__icontains=query)
+            )
+        )
+    else:
+        # Optional: show all reports for this officer if no query
+        results = CrimeReport.objects.filter(department=officer_dept)
+
+    context = {
+        'results': results,
+        'query': query
+    }
+    return render(request, 'crime_app/officerPage/search-report.html', context)
+
+
 # ===================== NOTIFICATIONS =====================
 @csrf_exempt
 def mark_notifications_read(request):

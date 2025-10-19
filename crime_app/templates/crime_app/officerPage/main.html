@@ -24,9 +24,18 @@
 
       <!-- Search bar -->
       <div class="relative">
-        <input type="text" placeholder="Search..."
-          class="bg-blue-800 px-28 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100">
-        <span class="absolute right-3 top-2 text-gray-400">🔍</span>
+        <form method="GET" action="{% url 'search-report' %}" class="relative w-full max-w-md mx-auto">
+        <input 
+            type="text" 
+            name="q" 
+            placeholder="Search..." 
+            value="{{ request.GET.q }}" 
+            class="bg-blue-800 text-sm px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100 w-full pr-10"
+        >
+        <button type="submit" class="absolute right-0 top-0 mt-2 mr-3 text-gray-400">
+            🔍
+        </button>
+    </form>
       </div>
 
       <!-- Right Icons Section -->

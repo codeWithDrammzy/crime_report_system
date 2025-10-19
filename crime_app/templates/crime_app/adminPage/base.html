@@ -18,13 +18,13 @@
       
     </div>
 
-    <!-- Search -->
+   
     <!-- Search Form -->
     <form method="GET" action="{% url 'search-crime' %}" class="relative w-full max-w-md mx-auto">
         <input 
             type="text" 
             name="q" 
-            placeholder="Search..." 
+            placeholder="Search... Crime" 
             value="{{ request.GET.q }}" 
             class="bg-blue-800 text-sm px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 placeholder-gray-300 text-gray-100 w-full pr-10"
         >

@@ -24,6 +24,7 @@ urlpatterns = [
     path('report-detail/<int:pk>', views.report_detail, name="report-detail"),
     path('update-status/<int:pk>/', views.update_status, name='update-status'),
     path('mark-notifications-read/', views.mark_notifications_read, name='mark-notifications-read'),
+    path('search-report', views.search_report, name="search-report"),
 
     
 ]
