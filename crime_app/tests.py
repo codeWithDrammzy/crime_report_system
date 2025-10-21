@@ -1,184 +1,439 @@
-<!-- ===================== Report Form Section ===================== -->
-<div id="reportFormSection" class="hidden min-h-[80vh] flex flex-col justify-center items-center bg-gray-50 p-10">
-  <div class="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-md border border-gray-200">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📝 Submit New Crime Report</h2>
+from django.shortcuts import render, HttpResponse, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout, get_user_model
+from django.contrib import messages
+from django.db.models import Count, Q
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
-    <form method="POST" enctype="multipart/form-data" class="space-y-5">
-      {% csrf_token %}
-      {{ form|crispy }}
+from .models import *
+from .forms import *
 
-      <!-- ===================== Media Capture Section ===================== -->
-      <div class="space-y-6 border-t pt-4">
+User = get_user_model()
 
-        <!-- Camera Capture -->
-        <div class="text-center">
-          <h3 class="font-semibold text-gray-800 mb-2">📸 Take Photo</h3>
-          <video id="cameraVideo" autoplay class="w-full rounded-md hidden"></video>
-          <canvas id="photoCanvas" class="hidden w-full mt-3 border rounded-md"></canvas>
-          <input type="hidden" name="photo_data" id="photoData">
-          <div class="space-x-2 mt-3">
-            <button type="button" id="startCamera" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg">Start Camera</button>
-            <button type="button" id="capturePhoto" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg hidden">Capture Photo</button>
-          </div>
-        </div>
+# ===================== HOME PAGE =====================
+def index(request):
+    return render(request, 'crime_app/homePage/index.html')
 
-        <!-- Audio Recorder -->
-        <div class="text-center">
-          <h3 class="font-semibold text-gray-800 mb-2">🎙️ Record Audio</h3>
-          <p id="audioTimer" class="text-gray-600 mb-2">00:00</p>
-          <audio id="audioPreview" controls class="hidden w-full mb-2"></audio>
-          <input type="hidden" name="audio_data" id="audioData">
-          <div class="space-x-2">
-            <button type="button" id="startAudio" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg">Start</button>
-            <button type="button" id="stopAudio" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg hidden">Stop</button>
-          </div>
-        </div>
 
-        <!-- Video Recorder -->
-        <div class="text-center">
-          <h3 class="font-semibold text-gray-800 mb-2">🎥 Record Video</h3>
-          <video id="videoPreview" controls class="w-full rounded-md mb-2 hidden"></video>
-          <input type="hidden" name="video_data" id="videoData">
-          <div class="space-x-2 mt-2">
-            <button type="button" id="startVideo" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg">Start Recording</button>
-            <button type="button" id="stopVideo" class="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg hidden">Stop Recording</button>
-          </div>
-        </div>
+# ===================== AUTHENTICATION =====================
+def my_login(request):
+    form = LoginForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        email = form.cleaned_data['email']
+        password = form.cleaned_data['password']
+        
+        # Find user by email
+        try:
+            user_obj = User.objects.get(email=email)
+            user = authenticate(request, username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            user = None
 
-      </div>
+        if user is not None:
+            login(request, user)
+            if user.is_superuser or getattr(user, 'role', None) == 'admin':
+                return redirect('dashboard')
+            elif getattr(user, 'role', None) == 'officer':
+                return redirect('officer-board')
+            else:
+                return redirect('user_board')
+        else:
+            form.add_error(None, 'Invalid email or password')
 
-      <!-- Submit / Cancel -->
-      <div class="flex justify-center space-x-4 mt-8">
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow transition">
-          Submit Report
-        </button>
-        <button type="button" id="cancelFormBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg shadow transition">
-          Cancel
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+    return render(request, 'crime_app/homePage/my-login.html', {'form': form})
 
-<script>
-  // ===================== Toggle Form/Table =====================
-  const formSection = document.getElementById('reportFormSection');
-  const tableSection = document.getElementById('reportTableSection');
-  document.getElementById('showFormBtn').onclick = () => {
-    formSection.classList.remove('hidden');
-    tableSection.classList.add('hidden');
-  };
-  document.getElementById('showTableBtn').onclick = () => {
-    formSection.classList.add('hidden');
-    tableSection.classList.remove('hidden');
-  };
-  document.getElementById('cancelFormBtn').onclick = () => {
-    formSection.classList.add('hidden');
-    tableSection.classList.remove('hidden');
-  };
 
-  // ===================== Photo Capture =====================
-  const video = document.getElementById('cameraVideo');
-  const canvas = document.getElementById('photoCanvas');
-  const startCamera = document.getElementById('startCamera');
-  const capturePhoto = document.getElementById('capturePhoto');
-  const photoDataInput = document.getElementById('photoData');
-  let photoStream;
+def register(request):
+    if request.method == "POST":
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            
+            # Auto-login after registration
+            email = form.cleaned_data.get('email')
+            password = form.cleaned_data.get('password1')
+            
+            # Get the user by email and authenticate
+            try:
+                user = User.objects.get(email=email)
+                user = authenticate(request, username=user.username, password=password)
+                
+                if user is not None:
+                    login(request, user)
+                    messages.success(request, f'Account created successfully! Welcome, {user.get_full_name()}.')
+                    
+                    # Redirect based on user role
+                    if user.role == 'admin':
+                        return redirect('dashboard')
+                    elif user.role == 'officer':
+                        return redirect('officer-board')
+                    else:
+                        return redirect('user-board')
+            except User.DoesNotExist:
+                messages.error(request, 'Error during auto-login. Please login manually.')
+                return redirect('my-login')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+           form = UserRegistrationForm()
+    
+    return render(request, 'crime_app/homePage/register.html', {'form': form})
 
-  startCamera.addEventListener('click', async () => {
-    photoStream = await navigator.mediaDevices.getUserMedia({ video: true });
-    video.srcObject = photoStream;
-    video.classList.remove('hidden');
-    capturePhoto.classList.remove('hidden');
-  });
 
-  capturePhoto.addEventListener('click', () => {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    canvas.classList.remove('hidden');
-    video.classList.add('hidden');
-    capturePhoto.classList.add('hidden');
-    // save photo as base64
-    photoDataInput.value = canvas.toDataURL('image/png');
-    // stop camera
-    photoStream.getTracks().forEach(track => track.stop());
-  });
+def my_logout(request):
+    logout(request)
+    return redirect('my-login')
 
-  // ===================== Audio Recording =====================
-  let audioRecorder, audioChunks = [], audioSeconds = 0, audioTimerInterval;
-  const startAudio = document.getElementById('startAudio');
-  const stopAudio = document.getElementById('stopAudio');
-  const audioPreview = document.getElementById('audioPreview');
-  const audioDataInput = document.getElementById('audioData');
-  const audioTimer = document.getElementById('audioTimer');
+# ===================== ADMIN DASHBOARD =====================
 
-  startAudio.addEventListener('click', async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+def dashboard(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+    
+    total_reports = CrimeReport.objects.count()
+    resolved_cases = CrimeReport.objects.filter(status='Resolved').count()
+    pending_reports = CrimeReport.objects.filter(status='Pending').count()
+    total_departments = Department.objects.count()
+    recent_reports = CrimeReport.objects.select_related('reporter').order_by('-date_reported')[:5]
 
-    audioRecorder.ondataavailable = e => audioChunks.push(e.data);
-    audioRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
-      audioPreview.src = URL.createObjectURL(audioBlob);
-      audioPreview.classList.remove('hidden');
-      // convert to base64
-      const reader = new FileReader();
-      reader.onloadend = () => audioDataInput.value = reader.result;
-      reader.readAsDataURL(audioBlob);
-    };
+    context = {
+        'total_reports': total_reports,
+        'resolved_cases': resolved_cases,
+        'pending_reports': pending_reports,
+        'total_departments': total_departments,
+        'recent_reports': recent_reports,
+    }
+    return render(request, 'crime_app/adminPage/dashboard.html', context)
 
-    audioRecorder.start();
-    startAudio.classList.add('hidden');
-    stopAudio.classList.remove('hidden');
-    audioSeconds = 0;
-    audioTimerInterval = setInterval(() => {
-      audioSeconds++;
-      audioTimer.textContent = new Date(audioSeconds * 1000).toISOString().substr(14, 5);
-    }, 1000);
-  });
 
-  stopAudio.addEventListener('click', () => {
-    audioRecorder.stop();
-    clearInterval(audioTimerInterval);
-    startAudio.classList.remove('hidden');
-    stopAudio.classList.add('hidden');
-  });
+def officer_list(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
+    if request.method == 'POST':
+        form = OfficerForm(request.POST, request.FILES)
+        if form.is_valid():
+            officer = form.save()
+            messages.success(request, f"Officer {officer.user.get_full_name()} added successfully!")
+            return redirect('officer-list')
+    else:
+        form = OfficerForm()
 
-  // ===================== Video Recording =====================
-  let videoRecorder, videoChunks = [];
-  const startVideo = document.getElementById('startVideo');
-  const stopVideo = document.getElementById('stopVideo');
-  const videoPreview = document.getElementById('videoPreview');
-  const videoDataInput = document.getElementById('videoData');
-  let videoStream;
+    officers = Officer.objects.all()
+    return render(request, 'crime_app/adminPage/officer-list.html', {'form': form, 'officers': officers})
 
-  startVideo.addEventListener('click', async () => {
-    videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    videoRecorder = new MediaRecorder(videoStream);
-    videoChunks = [];
 
-    videoRecorder.ondataavailable = e => videoChunks.push(e.data);
-    videoRecorder.onstop = () => {
-      const videoBlob = new Blob(videoChunks, { type: 'video/webm' });
-      videoPreview.src = URL.createObjectURL(videoBlob);
-      videoPreview.classList.remove('hidden');
-      const reader = new FileReader();
-      reader.onloadend = () => videoDataInput.value = reader.result;
-      reader.readAsDataURL(videoBlob);
-    };
+def department_list(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
+    departments = Department.objects.annotate(officer_count=Count('officers'))
+    form = DepartmentForm()
 
-    videoRecorder.start();
-    startVideo.classList.add('hidden');
-    stopVideo.classList.remove('hidden');
-  });
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Department created successfully!")
+            return redirect('department')
 
-  stopVideo.addEventListener('click', () => {
-    videoRecorder.stop();
-    stopVideo.classList.add('hidden');
-    startVideo.classList.remove('hidden');
-    videoStream.getTracks().forEach(track => track.stop());
-  });
-</script>
+    return render(request, 'crime_app/adminPage/department.html', {
+        'departments': departments,
+        'form': form,
+    })
+
+
+def reported_crime(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
+    reports = CrimeReport.objects.all().order_by('status')
+    return render(request, 'crime_app/adminPage/reported-crime.html', {'reports': reports})
+
+
+def crime_detail(request, pk):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
+    report = get_object_or_404(CrimeReport, id=pk)
+    departments = Department.objects.all()
+    return render(request, 'crime_app/adminPage/crime-detail.html', {
+        'report': report,
+        'departments': departments
+    })
+
+
+def update_report_status(request, pk):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
+    report = get_object_or_404(CrimeReport, id=pk)
+    if request.method == 'POST':
+        old_dept = report.department
+        new_status = request.POST.get('status')
+        dept_id = request.POST.get('department')
+
+        if dept_id:
+            report.department_id = dept_id
+
+        report.status = new_status
+        report.save()
+
+        # Notify new department officers if reassigned
+        if dept_id and str(old_dept.id) != str(dept_id):
+            officers = Officer.objects.filter(department_id=dept_id)
+            for officer in officers:
+                Notification.objects.create(
+                    officer=officer,
+                    message=f"📢 New case '{report.title}' has been assigned to your department."
+                )
+
+        messages.success(request, "Report updated successfully!")
+        return redirect('crime-detail', pk=report.id)
+
+
+# ===================== SEARCH CRIME =====================
+def search_crime(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
+    query = request.GET.get('q', '')
+    results = []
+
+    if query:
+        results = CrimeReport.objects.filter(
+            Q(report_id__icontains=query) |
+            Q(location__icontains=query) |
+            Q(status__icontains=query) |
+            Q(incident_type__icontains=query)
+        )
+
+    context = {
+        'results': results,
+        'query': query
+    }
+    return render(request, 'crime_app/adminPage/search-crime.html', context)
+
+
+# ===================== OFFICER DASHBOARD =====================
+def officer_board(request):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    officer = request.user.officer
+    officer_dept = officer.department
+    reports = CrimeReport.objects.filter(department=officer_dept)
+
+    context = {
+        'total_reports': reports.count(),
+        'resolved_cases': reports.filter(status='Resolved').count(),
+        'pending_cases': reports.filter(status='Pending').count(),
+        'dismissed_cases': reports.filter(status='Dismissed').count(),
+        'recent_reports': reports.order_by('-date_reported')[:8],
+        'new_reports': reports.order_by('-date_reported')[:3],
+    }
+    return render(request, 'crime_app/officerPage/officer-board.html', context)
+
+
+def add_report(request):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    if request.method == 'POST':
+        form = CrimeReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.evidence_image = request.FILES.get('photo_file') or request.FILES.get('evidence_image')
+            report.evidence_audio = request.FILES.get('audio_file') or request.FILES.get('evidence_audio')
+            report.evidence_video = request.FILES.get('video_file') or request.FILES.get('evidence_video')
+            if request.user.is_authenticated:
+                report.reporter = request.user
+            if hasattr(request.user, 'officer'):
+                report.department = request.user.officer.department
+            report.save()
+
+            # Notify officers
+            if report.department:
+                officers = Officer.objects.filter(department=report.department)
+                for officer in officers:
+                    Notification.objects.create(
+                        officer=officer,
+                        message=f"🚨 New crime reported in your department: {report.title}"
+                    )
+
+            messages.success(request, "Crime report submitted successfully!")
+            return redirect('officer-board')
+    else:
+        form = CrimeReportForm()
+
+    reports = CrimeReport.objects.filter(department=request.user.officer.department).order_by('-date_reported')
+    return render(request, 'crime_app/officerPage/add-report.html', {'form': form, 'reports': reports})
+
+
+def report_detail(request, pk):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    crime = get_object_or_404(CrimeReport, id=pk)
+    
+    # Check if officer has access to this report
+    if crime.department != request.user.officer.department:
+        messages.error(request, "You can only access reports from your department.")
+        return redirect('officer-board')
+        
+    return render(request, 'crime_app/officerPage/report-detail.html', {'crime': crime})
+
+
+def update_status(request, pk):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    report = get_object_or_404(CrimeReport, id=pk)
+
+    if hasattr(request.user, 'officer'):
+        officer = request.user.officer
+        if report.department != officer.department:
+            messages.error(request, "You can only update reports within your department.")
+            return redirect('report-detail', pk=report.id)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status:
+            report.status = new_status
+            report.save()
+            officers = Officer.objects.filter(department=report.department)
+            for o in officers:
+                Notification.objects.create(
+                    officer=o,
+                    message=f"⚙️ The status of case '{report.title}' has been updated to {new_status}."
+                )
+            messages.success(request, f"Report status updated to {new_status}.")
+        else:
+            messages.error(request, "Please select a valid status.")
+
+    return redirect('report-detail', pk=report.id)
+
+
+# ===================== SEARCH CRIME (OFFICER) =====================
+def search_report(request):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
+    officer = request.user.officer
+    officer_dept = officer.department
+
+    query = request.GET.get('q', '')
+    results = []
+
+    if query:
+        results = CrimeReport.objects.filter(
+            Q(department=officer_dept) & (
+                Q(report_id__icontains=query) |
+                Q(location__icontains=query) |
+                Q(status__icontains=query) |
+                Q(incident_type__icontains=query)
+            )
+        )
+    else:
+        # Optional: show all reports for this officer if no query
+        results = CrimeReport.objects.filter(department=officer_dept)
+
+    context = {
+        'results': results,
+        'query': query
+    }
+    return render(request, 'crime_app/officerPage/search-report.html', context)
+
+
+# ===================== CITIZEN DASHBOARD =====================
+def user_board(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Please login to access your dashboard.")
+        return redirect('my-login')
+    
+    # Check if user is citizen
+    if hasattr(request.user, 'officer') or (request.user.is_superuser or getattr(request.user, 'role', None) == 'admin'):
+        messages.error(request, "This page is for citizens only.")
+        return redirect('dashboard' if request.user.is_superuser or getattr(request.user, 'role', None) == 'admin' else 'officer-board')
+    
+    user_reports = CrimeReport.objects.filter(reporter=request.user).order_by('-date_reported')
+    
+    context = {
+        'total_reports': user_reports.count(),
+        'resolved_reports': user_reports.filter(status='Resolved').count(),
+        'pending_reports': user_reports.filter(status='Pending').count(),
+        'recent_reports': user_reports[:5],
+    }
+    return render(request, 'crime_app/citizenPage/user_board.html', context)
+
+
+def citizen_report_crime(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Please login to report a crime.")
+        return redirect('my-login')
+    
+    # Check if user is citizen
+    if hasattr(request.user, 'officer') or (request.user.is_superuser or getattr(request.user, 'role', None) == 'admin'):
+        messages.error(request, "Officers and admins should use their respective dashboards to report crimes.")
+        return redirect('dashboard' if request.user.is_superuser or getattr(request.user, 'role', None) == 'admin' else 'officer-board')
+    
+    if request.method == 'POST':
+        form = CrimeReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.reporter = request.user
+            report.save()
+            
+            messages.success(request, "Crime report submitted successfully! You will be notified of updates.")
+            return redirect('user_board')
+    else:
+        form = CrimeReportForm()
+
+    return render(request, 'crime_app/citizenPage/citizen_report_crime.html', {'form': form})
+
+
+def citizen_report_detail(request, pk):
+    if not request.user.is_authenticated:
+        messages.error(request, "Please login to view report details.")
+        return redirect('my-login')
+    
+    report = get_object_or_404(CrimeReport, id=pk)
+    
+    # Check if the report belongs to the current user
+    if report.reporter != request.user:
+        messages.error(request, "You can only view your own reports.")
+        return redirect('user_board')
+        
+    return render(request, 'crime_app/citizenPage/citizen_report_detail.html', {'report': report})
+
+
+# ===================== NOTIFICATIONS =====================
+@csrf_exempt
+def mark_notifications_read(request):
+    if request.method == "POST":
+        if hasattr(request.user, "officer"):
+            Notification.objects.filter(officer=request.user.officer, is_read=False).update(is_read=True)
+            return JsonResponse({"status": "success"})
+        else:
+            return JsonResponse({"status": "error", "message": "User is not an officer"}, status=403)
+
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)

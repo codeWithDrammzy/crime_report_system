@@ -21,7 +21,13 @@ def my_login(request):
     if request.method == "POST" and form.is_valid():
         email = form.cleaned_data['email']
         password = form.cleaned_data['password']
-        user = authenticate(request, username=email, password=password)
+        
+        # Find user by email
+        try:
+            user_obj = User.objects.get(email=email)
+            user = authenticate(request, username=user_obj.username, password=password)
+        except User.DoesNotExist:
+            user = None
 
         if user is not None:
             login(request, user)
@@ -30,20 +36,41 @@ def my_login(request):
             elif getattr(user, 'role', None) == 'officer':
                 return redirect('officer-board')
             else:
-                return redirect('user_board')
+                return redirect('user-board')
         else:
             form.add_error(None, 'Invalid email or password')
 
     return render(request, 'crime_app/homePage/my-login.html', {'form': form})
 
 
+def register(request):
+    if request.method == "POST":
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            
+            messages.success(request, 'Account created successfully! Please login to continue.')
+            return redirect('my-login')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserRegistrationForm()
+    
+    return render(request, 'crime_app/homePage/register.html', {'form': form})
+
+
 def my_logout(request):
     logout(request)
     return redirect('my-login')
 
-
 # ===================== ADMIN DASHBOARD =====================
+
 def dashboard(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+    
     total_reports = CrimeReport.objects.count()
     resolved_cases = CrimeReport.objects.filter(status='Resolved').count()
     pending_reports = CrimeReport.objects.filter(status='Pending').count()
@@ -61,6 +88,11 @@ def dashboard(request):
 
 
 def officer_list(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
     if request.method == 'POST':
         form = OfficerForm(request.POST, request.FILES)
         if form.is_valid():
@@ -75,6 +107,11 @@ def officer_list(request):
 
 
 def department_list(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
     departments = Department.objects.annotate(officer_count=Count('officers'))
     form = DepartmentForm()
 
@@ -82,6 +119,7 @@ def department_list(request):
         form = DepartmentForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Department created successfully!")
             return redirect('department')
 
     return render(request, 'crime_app/adminPage/department.html', {
@@ -91,11 +129,21 @@ def department_list(request):
 
 
 def reported_crime(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
     reports = CrimeReport.objects.all().order_by('status')
     return render(request, 'crime_app/adminPage/reported-crime.html', {'reports': reports})
 
 
 def crime_detail(request, pk):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
     report = get_object_or_404(CrimeReport, id=pk)
     departments = Department.objects.all()
     return render(request, 'crime_app/adminPage/crime-detail.html', {
@@ -105,6 +153,11 @@ def crime_detail(request, pk):
 
 
 def update_report_status(request, pk):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
     report = get_object_or_404(CrimeReport, id=pk)
     if request.method == 'POST':
         old_dept = report.department
@@ -132,6 +185,11 @@ def update_report_status(request, pk):
 
 # ===================== SEARCH CRIME =====================
 def search_crime(request):
+    # Check if user is admin
+    if not request.user.is_authenticated or (not request.user.is_superuser and getattr(request.user, 'role', None) != 'admin'):
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('my-login')
+        
     query = request.GET.get('q', '')
     results = []
 
@@ -172,6 +230,10 @@ def officer_board(request):
 
 
 def add_report(request):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
     if request.method == 'POST':
         form = CrimeReportForm(request.POST, request.FILES)
         if form.is_valid():
@@ -194,6 +256,7 @@ def add_report(request):
                         message=f"🚨 New crime reported in your department: {report.title}"
                     )
 
+            messages.success(request, "Crime report submitted successfully!")
             return redirect('officer-board')
     else:
         form = CrimeReportForm()
@@ -203,11 +266,25 @@ def add_report(request):
 
 
 def report_detail(request, pk):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
     crime = get_object_or_404(CrimeReport, id=pk)
+    
+    # Check if officer has access to this report
+    if crime.department != request.user.officer.department:
+        messages.error(request, "You can only access reports from your department.")
+        return redirect('officer-board')
+        
     return render(request, 'crime_app/officerPage/report-detail.html', {'crime': crime})
 
 
 def update_status(request, pk):
+    if not hasattr(request.user, 'officer'):
+        messages.error(request, "Only officers can access this page.")
+        return redirect('my-login')
+
     report = get_object_or_404(CrimeReport, id=pk)
 
     if hasattr(request.user, 'officer'):
@@ -265,6 +342,57 @@ def search_report(request):
     }
     return render(request, 'crime_app/officerPage/search-report.html', context)
 
+
+# ===================== CITIZEN DASHBOARD =====================
+def user_board(request):
+    if not request.user.is_authenticated:
+        messages.error(request, "Please login to access your dashboard.")
+        return redirect('my-login')
+    
+    # Check if user is citizen
+    if hasattr(request.user, 'officer') or (request.user.is_superuser or getattr(request.user, 'role', None) == 'admin'):
+        messages.error(request, "This page is for citizens only.")
+        return redirect('dashboard' if request.user.is_superuser or getattr(request.user, 'role', None) == 'admin' else 'officer-board')
+    
+    user_reports = CrimeReport.objects.filter(reporter=request.user).order_by('-date_reported')
+    
+    context = {
+        'total_reports': user_reports.count(),
+        'resolved_reports': user_reports.filter(status='Resolved').count(),
+        'pending_reports': user_reports.filter(status='Pending').count(),
+        'recent_reports': user_reports[:5],
+    }
+    return render(request, 'crime_app/citizenPage/user-board.html', context)
+
+def user_report(request):
+    if request.method == 'POST':
+        form = CrimeReportForm(request.POST, request.FILES)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.evidence_image = request.FILES.get('photo_file') or request.FILES.get('evidence_image')
+            report.evidence_audio = request.FILES.get('audio_file') or request.FILES.get('evidence_audio')
+            report.evidence_video = request.FILES.get('video_file') or request.FILES.get('evidence_video')
+            if request.user.is_authenticated:
+                report.reporter = request.user
+            if hasattr(request.user, 'officer'):
+                report.department = request.user.officer.department
+            report.save()
+
+            # Notify officers
+            if report.department:
+                officers = Officer.objects.filter(department=report.department)
+                for officer in officers:
+                    Notification.objects.create(
+                        officer=officer,
+                        message=f"🚨 New crime reported in your department: {report.title}"
+                    )
+
+            messages.success(request, "Crime report submitted successfully!")
+            return redirect('officer-board')
+    else:
+        form = CrimeReportForm()
+
+    return render(request, 'crime_app/citizenPage/user-report.html')
 
 # ===================== NOTIFICATIONS =====================
 @csrf_exempt

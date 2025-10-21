@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | QuickReport Nigeria</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    
+    <!-- Navbar -->
+    <nav class="bg-blue-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-yellow-400 p-2 rounded-full">
+                        <i class="fas fa-shield-alt text-blue-900 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-yellow-400">QuickReport Nigeria</h1>
+                        <p class="text-xs text-gray-300">Citizen Dashboard</p>
+                    </div>
+                </div>
+
+                <!-- User Menu -->
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">Welcome, {{ user.get_full_name }}</span>
+                    <div class="relative">
+                        <button id="userMenu" class="flex items-center space-x-2 text-sm bg-blue-800 px-3 py-2 rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-user-circle"></i>
+                            <span>My Account</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg py-2 z-50">
+                            <a href="" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                            </a>
+                            <a href="" class="block px-4 py-2 hover:bg-gray-100">
+                                <i class="fas fa-plus-circle mr-2"></i>Report Crime
+                            </a>
+                            <div class="border-t my-1"></div>
+                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% block content %}
+    {% endblock %}
+   
+
+    <!-- JavaScript for dropdown -->
+    <script>
+        // User menu dropdown
+        document.getElementById('userMenu').addEventListener('click', function() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            if (!userMenu.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    </script>
+
+</body>
+</html>

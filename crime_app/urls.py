@@ -4,7 +4,13 @@ from .import views
 urlpatterns = [
     path('',views.index, name ="") ,
     path("my-login" , views.my_login, name="my-login"),
+    path("register" , views.register, name="register"),
     path('logout/', views.my_logout, name='logout'),
+
+
+    # ========= User ==========
+    path("user-board" , views.user_board, name="user-board"),
+    path("user-report" , views.user_report, name="user-report"),
 
 
     # ========= Admin ==========

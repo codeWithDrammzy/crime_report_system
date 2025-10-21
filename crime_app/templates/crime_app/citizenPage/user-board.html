@@ -1,0 +1,362 @@
+{% extends "crime_app/citizenPage/maain.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Crime Reporting Dashboard</h1>
+        <p class="text-gray-600 mt-2">Report crimes and track your submissions in real-time</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Reports -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Your Reports</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ total_reports }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="fas fa-file-alt text-blue-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Reports -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Under Review</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ pending_reports }}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class="fas fa-clock text-yellow-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolved Reports -->
+        <div class="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600">Resolved</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ resolved_reports }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Report -->
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-md p-6 hover:shadow-lg transition">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-blue-100">Quick Action</p>
+                    <a href="{% url 'user-report' %}" class="inline-block mt-2 bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition shadow">
+                        <i class="fas fa-plus mr-2"></i>Report Crime
+                    </a>
+                </div>
+                <div class="bg-blue-400 p-3 rounded-full">
+                    <i class="fas fa-bullhorn text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Recent Reports Section -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800">Your Recent Reports</h2>
+                    <a href="" class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
+                        View History <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+
+                {% if recent_reports %}
+                <div class="space-y-4">
+                    {% for report in recent_reports %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition cursor-pointer" onclick="location.href='{% url 'citizen_report_detail' report.id %}'">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center space-x-3">
+                                    <h3 class="font-semibold text-gray-800">{{ report.title }}</h3>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                        {% if report.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                        {% elif report.status == 'Resolved' %}bg-green-100 text-green-800
+                                        {% elif report.status == 'Dismissed' %}bg-red-100 text-red-800
+                                        {% elif report.status == 'In Progress' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ report.status }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-2">{{ report.description|truncatewords:25 }}</p>
+                                <div class="flex items-center space-x-4 mt-3 text-xs text-gray-500">
+                                    <span class="flex items-center">
+                                        <i class="fas fa-map-marker-alt mr-1 text-red-500"></i> 
+                                        {{ report.location }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i class="fas fa-calendar mr-1 text-blue-500"></i> 
+                                        {{ report.date_reported|date:"M d, Y" }}
+                                    </span>
+                                    <span class="flex items-center">
+                                        <i class="fas fa-building mr-1 text-purple-500"></i> 
+                                        {{ report.department.name }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex justify-between items-center">
+                            <span class="text-xs text-gray-500">Report ID: #{{ report.report_id }}</span>
+                            <span class="text-xs text-gray-500">{{ report.date_reported|timesince }} ago</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12">
+                    <div class="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-file-alt text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">No Reports Yet</h3>
+                    <p class="text-gray-500 mb-4">Start by reporting your first crime incident</p>
+                    <a href="{% url 'user-report' %}" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        <i class="fas fa-plus mr-2"></i>Report First Crime
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar - Quick Actions & Status -->
+        <div class="space-y-6">
+            <!-- Quick Report Card -->
+            <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md p-6 text-white">
+                <h2 class="text-xl font-bold mb-3">Report a Crime</h2>
+                <p class="text-blue-100 mb-4">Quickly report any criminal activity with evidence and GPS location</p>
+                <ul class="space-y-2 text-blue-100 text-sm mb-6">
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle mr-2 text-green-300"></i>
+                        Add photos/videos/audio evidence
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle mr-2 text-green-300"></i>
+                        Automatic GPS location capture
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check-circle mr-2 text-green-300"></i>
+                        Choose department to report to
+                    </li>
+                </ul>
+                <a href="{% url 'user-report' %}" class="block w-full bg-white text-blue-600 text-center py-3 rounded-lg font-bold hover:bg-blue-50 transition">
+                    Start Report <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+            <!-- Status Guide -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Report Status</h2>
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-4 p-3 bg-yellow-50 rounded-lg">
+                        <div class="bg-yellow-500 p-2 rounded-full">
+                            <i class="fas fa-clock text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-yellow-800">Pending</p>
+                            <p class="text-xs text-yellow-600">Under initial review</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg">
+                        <div class="bg-blue-500 p-2 rounded-full">
+                            <i class="fas fa-search text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-blue-800">In Progress</p>
+                            <p class="text-xs text-blue-600">Being investigated</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4 p-3 bg-green-50 rounded-lg">
+                        <div class="bg-green-500 p-2 rounded-full">
+                            <i class="fas fa-check text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-green-800">Resolved</p>
+                            <p class="text-xs text-green-600">Case successfully closed</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4 p-3 bg-red-50 rounded-lg">
+                        <div class="bg-red-500 p-2 rounded-full">
+                            <i class="fas fa-times text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-red-800">Dismissed</p>
+                            <p class="text-xs text-red-600">Case rejected or closed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Contacts -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Emergency Contacts</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-red-500 p-2 rounded-full">
+                                <i class="fas fa-phone text-white text-sm"></i>
+                            </div>
+                            <span class="font-semibold text-red-700">Emergency</span>
+                        </div>
+                        <span class="font-mono text-red-600">911</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-orange-500 p-2 rounded-full">
+                                <i class="fas fa-shield-alt text-white text-sm"></i>
+                            </div>
+                            <span class="font-semibold text-orange-700">Police</span>
+                        </div>
+                        <span class="font-mono text-orange-600">191</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-blue-500 p-2 rounded-full">
+                                <i class="fas fa-ambulance text-white text-sm"></i>
+                            </div>
+                            <span class="font-semibold text-blue-700">Ambulance</span>
+                        </div>
+                        <span class="font-mono text-blue-600">192</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GPS Location Modal (will be triggered from report form) -->
+<div id="gpsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">📍 Get Your Location</h3>
+        <p class="text-gray-600 mb-6">We need your location to accurately report the crime incident.</p>
+        
+        <div class="space-y-4">
+            <div id="locationStatus" class="bg-blue-50 p-4 rounded-lg">
+                <p class="text-blue-700 text-sm">Click the button below to get your current location.</p>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="getLocationBtn" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    <i class="fas fa-map-marker-alt mr-2"></i>Get Location
+                </button>
+                <button id="cancelLocationBtn" class="px-6 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
+                    Cancel
+                </button>
+            </div>
+            
+            <div id="locationResult" class="hidden">
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-green-700 text-sm font-semibold">Location captured successfully!</p>
+                    <p id="coordinates" class="text-green-600 text-xs mt-1"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// GPS Location Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const gpsModal = document.getElementById('gpsModal');
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const cancelLocationBtn = document.getElementById('cancelLocationBtn');
+    const locationStatus = document.getElementById('locationStatus');
+    const locationResult = document.getElementById('locationResult');
+    const coordinates = document.getElementById('coordinates');
+
+    function showGPSModal() {
+        gpsModal.classList.remove('hidden');
+    }
+
+    function hideGPSModal() {
+        gpsModal.classList.add('hidden');
+    }
+
+    function getLocation() {
+        locationStatus.innerHTML = '<p class="text-blue-700 text-sm">🔄 Getting your location...</p>';
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Display coordinates
+                    coordinates.textContent = `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`;
+                    locationResult.classList.remove('hidden');
+                    locationStatus.innerHTML = '<p class="text-green-700 text-sm">✅ Location captured successfully!</p>';
+                    
+                    // Here you would typically send this to your form
+                    console.log('GPS Coordinates:', lat, lng);
+                    // You can set these values in hidden form fields
+                    // document.getElementById('latitude').value = lat;
+                    // document.getElementById('longitude').value = lng;
+                },
+                function(error) {
+                    let errorMessage = 'Unable to get your location. ';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Please allow location access.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Location request timed out.';
+                            break;
+                        default:
+                            errorMessage += 'An unknown error occurred.';
+                            break;
+                    }
+                    locationStatus.innerHTML = `<p class="text-red-700 text-sm">❌ ${errorMessage}</p>`;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        } else {
+            locationStatus.innerHTML = '<p class="text-red-700 text-sm">❌ Geolocation is not supported by this browser.</p>';
+        }
+    }
+
+    // Event Listeners
+    getLocationBtn.addEventListener('click', getLocation);
+    cancelLocationBtn.addEventListener('click', hideGPSModal);
+
+    // Close modal when clicking outside
+    gpsModal.addEventListener('click', function(e) {
+        if (e.target === gpsModal) {
+            hideGPSModal();
+        }
+    });
+});
+
+// Make report cards clickable
+document.querySelectorAll('.cursor-pointer').forEach(card => {
+    card.addEventListener('click', function() {
+        window.location.href = this.getAttribute('onclick').match(/'(.*?)'/)[1];
+    });
+});
+</script>
+{% endblock content %}
