@@ -1,134 +1,311 @@
 {% extends "crime_app/adminPage/base.html" %}
 {% block content %}
 
-<!-- Stat Cards -->
+
+
+<!-- Enhanced Stat Cards -->
 <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-600">
-    <a href="{% url 'reported-crime' %}">
-      <h3 class="text-gray-500 text-sm">Total Reports</h3>
-      <p class="text-3xl font-bold text-blue-800 mt-2">{{ total_reports }}</p>
-      <p class="text-xs text-gray-400 mt-1">+8% this week</p>
-    </a>
-  </div>
+    <!-- Total Reports -->
+    <div class="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 rounded-2xl shadow-lg transform hover:scale-105 transition duration-300">
+        <a href="{% url 'reported-crime' %}">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-blue-100 text-sm font-semibold">TOTAL REPORTS</h3>
+                    <p class="text-3xl font-bold mt-2">{{ total_reports }}</p>
+                    <p class="text-blue-200 text-xs mt-1">All time submissions</p>
+                </div>
+                <div class="bg-blue-500 p-3 rounded-xl">
+                    <i class="fas fa-file-alt text-white text-2xl"></i>
+                </div>
+            </div>
+        </a>
+    </div>
 
-  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-green-600">
-    <h3 class="text-gray-500 text-sm">Resolved Cases</h3>
-    <p class="text-3xl font-bold text-green-700 mt-2">{{ resolved_cases }}</p>
-    <p class="text-xs text-gray-400 mt-1">+4% this month</p>
-  </div>
+    <!-- Resolved Cases -->
+    <div class="bg-gradient-to-br from-green-600 to-green-700 text-white p-6 rounded-2xl shadow-lg transform hover:scale-105 transition duration-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-green-100 text-sm font-semibold">RESOLVED CASES</h3>
+                <p class="text-3xl font-bold mt-2">{{ resolved_cases }}</p>
+                <p class="text-green-200 text-xs mt-1">Successfully closed</p>
+            </div>
+            <div class="bg-green-500 p-3 rounded-xl">
+                <i class="fas fa-check-circle text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
 
-  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
-    <h3 class="text-gray-500 text-sm">Pending Reports</h3>
-    <p class="text-3xl font-bold text-yellow-600 mt-2">{{ pending_reports }}</p>
-    <p class="text-xs text-gray-400 mt-1">-2% this week</p>
-  </div>
+    <!-- Pending Reports -->
+    <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-2xl shadow-lg transform hover:scale-105 transition duration-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-yellow-100 text-sm font-semibold">PENDING REPORTS</h3>
+                <p class="text-3xl font-bold mt-2">{{ pending_reports }}</p>
+                <p class="text-yellow-200 text-xs mt-1">Awaiting action</p>
+            </div>
+            <div class="bg-yellow-400 p-3 rounded-xl">
+                <i class="fas fa-clock text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
 
-  <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-red-600">
-    <h3 class="text-gray-500 text-sm">Departments</h3>
-    <p class="text-3xl font-bold text-red-600 mt-2">{{ total_departments }}</p>
-    <p class="text-xs text-gray-400 mt-1">Active now</p>
-  </div>
+    <!-- Departments -->
+    <div class="bg-gradient-to-br from-red-600 to-red-700 text-white p-6 rounded-2xl shadow-lg transform hover:scale-105 transition duration-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-red-100 text-sm font-semibold">DEPARTMENTS</h3>
+                <p class="text-3xl font-bold mt-2">{{ total_departments }}</p>
+                <p class="text-red-200 text-xs mt-1">Active departments</p>
+            </div>
+            <div class="bg-red-500 p-3 rounded-xl">
+                <i class="fas fa-building text-white text-2xl"></i>
+            </div>
+        </div>
+    </div>
 </section>
 
-<!-- Recent Reports -->
-<section class="bg-white p-6 rounded-lg shadow-md mb-8">
-  <h2 class="text-lg font-semibold text-gray-700 mb-4">Recent Crime Reports</h2>
-  <div class="overflow-x-auto">
-    <table class="w-full text-left border-collapse text-sm">
-      <thead class="bg-blue-800 text-white">
-        <tr>
-          <th class="px-4 py-2">Report Title</th>
-          <th class="px-4 py-2">Reporter</th>
-          <th class="px-4 py-2">Office Incharge</th>
-          <th class="px-4 py-2">Status</th>
-          <th class="px-4 py-2">Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for report in recent_reports %}
-          <tr class="border-b hover:bg-gray-50">
-            <td class="px-4 py-2 font-semibold text-blue-700">{{ report.title }}</td>
-            <td class="px-4 py-2">{{ report.reporter.get_full_name }}</td>
-            <td class="px-4 font-semibold py-2">{{ report.department.name|default:"Unassigned"|upper }}</td>
-            <td class="px-4 py-2">
-              <span class="px-2 py-1 rounded text-sm font-semibold
-                {% if report.status == 'Pending' %}bg-yellow-100 text-yellow-700
-                {% elif report.status == 'Resolved' %}bg-green-100 text-green-700
-                {% elif report.status == 'Investigating' %}bg-blue-100 text-blue-700
-                {% else %}bg-gray-100 text-gray-700{% endif %}">
-                {{ report.status }}
-              </span>
-            </td>
-            <td class="px-4 py-2 text-gray-500">{{ report.date_reported|date:"M d, Y" }}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="5" class="text-center text-gray-500 py-4">No reports found yet.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Recent Reports Section -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-history text-blue-600 mr-3"></i>
+                    Recent Crime Reports
+                </h2>
+                <a href="{% url 'reported-crime' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-semibold flex items-center">
+                    View All <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
 
-<!-- Charts Section -->
-<section class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-  <!-- Chart 1: Crime by Status -->
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-lg font-semibold text-gray-700 mb-4">Crimes by Status</h2>
-    <canvas id="crimeStatusChart" class="h-64"></canvas>
-  </div>
+            {% if recent_reports %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                        <tr>
+                            <th class="px-6 py-4 font-semibold text-sm">Report Title</th>
+                            <th class="px-6 py-4 font-semibold text-sm">Reporter</th>
+                            <th class="px-6 py-4 font-semibold text-sm">Department</th>
+                            <th class="px-6 py-4 font-semibold text-sm">Status</th>
+                            <th class="px-6 py-4 font-semibold text-sm">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for report in recent_reports %}
+                        <tr class="hover:bg-blue-50 transition duration-200 group cursor-pointer" onclick="location.href='{% url 'crime-detail' report.id %}'">
+                            <td class="px-6 py-4">
+                                <div class="font-semibold text-gray-800 group-hover:text-blue-700 transition">{{ report.title }}</div>
+                                <div class="text-xs text-gray-500 mt-1">ID: #{{ report.id }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="font-medium text-gray-700">{{ report.reporter.get_full_name }}</div>
+                                <div class="text-xs text-gray-500">{{ report.reporter.email }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                                    <i class="fas fa-building mr-2 text-blue-600"></i>
+                                    {{ report.department.name|default:"Unassigned" }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold
+                                    {% if report.status == 'Pending' %}bg-yellow-100 text-yellow-800 border border-yellow-200
+                                    {% elif report.status == 'Resolved' %}bg-green-100 text-green-800 border border-green-200
+                                    {% elif report.status == 'Investigating' %}bg-blue-100 text-blue-800 border border-blue-200
+                                    {% elif report.status == 'Dismissed' %}bg-red-100 text-red-800 border border-red-200
+                                    {% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}">
+                                    <i class="fas fa-circle text-xs mr-2 
+                                        {% if report.status == 'Pending' %}text-yellow-500
+                                        {% elif report.status == 'Resolved' %}text-green-500
+                                        {% elif report.status == 'Investigating' %}text-blue-500
+                                        {% elif report.status == 'Dismissed' %}text-red-500
+                                        {% else %}text-gray-500{% endif %}"></i>
+                                    {{ report.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-gray-600 font-medium">{{ report.date_reported|date:"M d, Y" }}</div>
+                                <div class="text-xs text-gray-500">{{ report.date_reported|timesince }} ago</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <div class="bg-gradient-to-br from-blue-100 to-gray-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-file-alt text-blue-400 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-700 mb-3">No Reports Yet</h3>
+                <p class="text-gray-500 mb-6 max-w-md mx-auto">No crime reports have been submitted yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
-  <!-- Chart 2: Crime by Incident Type -->
-  <div class="bg-white p-6 rounded-lg shadow-md">
-    <h2 class="text-lg font-semibold text-gray-700 mb-4">Crimes by Incident Type</h2>
-    <canvas id="crimeTypeChart" class="h-64"></canvas>
-  </div>
-</section>
+    <!-- Sidebar - Quick Actions & Stats -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-bolt text-yellow-500 mr-3"></i>
+                Quick Actions
+            </h2>
+            <div class="space-y-3">
+                <a href="{% url 'reported-crime' %}" class="flex items-center justify-between p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition group border border-blue-100">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-blue-500 p-3 rounded-lg">
+                            <i class="fas fa-list text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-blue-700 block">Manage Reports</span>
+                            <span class="text-blue-600 text-sm">View all crime reports</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-blue-400 group-hover:text-blue-600"></i>
+                </a>
 
-<!-- Load Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <a href="{% url 'officer-list' %}" class="flex items-center justify-between p-4 bg-green-50 rounded-xl hover:bg-green-100 transition group border border-green-100">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-green-500 p-3 rounded-lg">
+                            <i class="fas fa-users text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-green-700 block">Manage Officers</span>
+                            <span class="text-green-600 text-sm">Add/edit officers</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-green-400 group-hover:text-green-600"></i>
+                </a>
+
+                <a href="{% url 'department' %}" class="flex items-center justify-between p-4 bg-purple-50 rounded-xl hover:bg-purple-100 transition group border border-purple-100">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-purple-500 p-3 rounded-lg">
+                            <i class="fas fa-building text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <span class="font-bold text-purple-700 block">Departments</span>
+                            <span class="text-purple-600 text-sm">Manage departments</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-purple-400 group-hover:text-purple-600"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Status Overview -->
+        <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-lg p-6 text-white">
+            <h2 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-chart-pie mr-3"></i>
+                Status Overview
+            </h2>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-blue-100">Pending</span>
+                    <span class="font-bold text-yellow-300">{{ pending_reports }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-blue-100">Investigating</span>
+                    <span class="font-bold text-blue-300">
+                        {% with investigating_count=recent_reports|length|default:0 %}
+                            {{ investigating_count }}
+                        {% endwith %}
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-blue-100">Resolved</span>
+                    <span class="font-bold text-green-300">{{ resolved_cases }}</span>
+                </div>
+                <div class="pt-3 border-t border-blue-500">
+                    <div class="flex justify-between items-center font-bold">
+                        <span>Total</span>
+                        <span>{{ total_reports }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Health -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-heartbeat text-red-500 mr-3"></i>
+                System Health
+            </h2>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                        <span class="font-semibold text-green-700">System Online</span>
+                    </div>
+                    <span class="text-green-600 text-sm">Active</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-database text-blue-500 text-xl"></i>
+                        <span class="font-semibold text-blue-700">Database</span>
+                    </div>
+                    <span class="text-blue-600 text-sm">Healthy</span>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-shield-alt text-yellow-500 text-xl"></i>
+                        <span class="font-semibold text-yellow-700">Security</span>
+                    </div>
+                    <span class="text-yellow-600 text-sm">Protected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card-animation {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    /* Hover effects */
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        transition: transform 0.3s ease;
+    }
+
+    /* Smooth transitions for table rows */
+    tr {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
 
 <script>
-  // Chart Data from Django
-  const crimeByStatus = JSON.parse('{{ crime_by_status|safe|escapejs }}');
-  const crimeByType = JSON.parse('{{ crime_by_type|safe|escapejs }}');
-
-  // === Crime by Status Chart ===
-  const ctxStatus = document.getElementById('crimeStatusChart').getContext('2d');
-  new Chart(ctxStatus, {
-    type: 'pie',
-    data: {
-      labels: crimeByStatus.map(item => item.status),
-      datasets: [{
-        label: 'Crime Count',
-        data: crimeByStatus.map(item => item.count),
-        backgroundColor: ['#FACC15', '#3B82F6', '#10B981', '#EF4444'],
-      }]
-    },
-    options: { responsive: true }
-  });
-
-  // === Crime by Incident Type Chart ===
-  const ctxType = document.getElementById('crimeTypeChart').getContext('2d');
-  new Chart(ctxType, {
-    type: 'bar',
-    data: {
-      labels: crimeByType.map(item => item.incident_type),
-      datasets: [{
-        label: 'Number of Crimes',
-        data: crimeByType.map(item => item.count),
-        backgroundColor: '#3B82F6',
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: { y: { beginAtZero: true } }
-    }
-  });
+    // Add interactive effects
+    document.addEventListener('DOMContentLoaded', function() {
+        // Make table rows clickable with smooth transition
+        document.querySelectorAll('tr[onclick]').forEach(row => {
+            row.style.cursor = 'pointer';
+            row.addEventListener('click', function() {
+                const url = this.getAttribute('onclick')?.match(/location\.href='(.*?)'/)?.[1];
+                if (url) {
+                    // Add a small delay for the hover effect
+                    setTimeout(() => {
+                        window.location.href = url;
+                    }, 150);
+                }
+            });
+        });
+    });
 </script>
-
-
-
 
 {% endblock %}

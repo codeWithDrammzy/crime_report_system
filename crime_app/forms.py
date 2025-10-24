@@ -181,40 +181,136 @@ class CrimeSearchForm(forms.Form):
 
 
 class CrimeReportForm(forms.ModelForm):
+    # Add explicit fields for live capture
+    photo_file = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'hidden'}))
+    video_file = forms.FileField(required=False, widget=forms.FileInput(attrs={'class': 'hidden'}))
+    audio_file = forms.FileField(required=False, widget=forms.FileInput(attrs={'class': 'hidden'}))
+    
     class Meta:
         model = CrimeReport
         fields = [
             'title', 'description', 'location',
-            'incident_type', 'department',
+            'incident_type', 'department', 'priority',
+            'latitude', 'longitude',  # ADD THESE
             'evidence_image', 'evidence_video', 'evidence_audio'
         ]
         widgets = {
             'description': forms.Textarea(attrs={
                 'rows': 4, 
-                'placeholder': 'Describe the incident...',
-                'class': 'form-control'
+                'placeholder': 'Describe the incident in detail...',
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
             }),
             'title': forms.TextInput(attrs={
                 'placeholder': 'Enter report title',
-                'class': 'form-control'
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
             }),
             'location': forms.TextInput(attrs={
-                'placeholder': 'Where did it happen?',
-                'class': 'form-control'
+                'placeholder': 'Enter location or use GPS button below',
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'id': 'locationInput'
             }),
             'incident_type': forms.Select(attrs={
-                'class': 'form-control'
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
             }),
             'department': forms.Select(attrs={
-                'class': 'form-control'
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'latitude': forms.HiddenInput(attrs={
+                'id': 'latitudeField'
+            }),
+            'longitude': forms.HiddenInput(attrs={
+                'id': 'longitudeField'
             }),
             'evidence_image': forms.ClearableFileInput(attrs={
-                'class': 'form-control'
+                'class': 'hidden',
+                'id': 'evidenceImageInput'
             }),
             'evidence_video': forms.ClearableFileInput(attrs={
-                'class': 'form-control'
+                'class': 'hidden', 
+                'id': 'evidenceVideoInput'
             }),
             'evidence_audio': forms.ClearableFileInput(attrs={
-                'class': 'form-control'
+                'class': 'hidden',
+                'id': 'evidenceAudioInput'
             }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set required fields
+        self.fields['title'].required = True
+        self.fields['description'].required = True
+        self.fields['location'].required = True
+        self.fields['incident_type'].required = True
+        self.fields['department'].required = True
+        self.fields['priority'].required = True
+    class Meta:
+        model = CrimeReport
+        fields = [
+            'title', 'description', 'location',
+            'incident_type', 'department', 'priority',
+            'latitude', 'longitude',
+            'evidence_image', 'evidence_video', 'evidence_audio'
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={
+                'rows': 4, 
+                'placeholder': 'Describe the incident in detail...',
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'title': forms.TextInput(attrs={
+                'placeholder': 'Enter report title',
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'location': forms.TextInput(attrs={
+                'placeholder': 'Enter location or use GPS button below',
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'id': 'locationInput'
+            }),
+            'incident_type': forms.Select(attrs={
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'department': forms.Select(attrs={
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'priority': forms.Select(attrs={
+                'class': 'border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            }),
+            'latitude': forms.HiddenInput(attrs={
+                'id': 'latitudeField'
+            }),
+            'longitude': forms.HiddenInput(attrs={
+                'id': 'longitudeField'
+            }),
+            'evidence_image': forms.ClearableFileInput(attrs={
+                'class': 'hidden',
+                'id': 'photoFileInput'
+            }),
+            'evidence_video': forms.ClearableFileInput(attrs={
+                'class': 'hidden', 
+                'id': 'videoFileInput'
+            }),
+            'evidence_audio': forms.ClearableFileInput(attrs={
+                'class': 'hidden',
+                'id': 'audioFileInput'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set required fields
+        self.fields['title'].required = True
+        self.fields['description'].required = True
+        self.fields['location'].required = True
+        self.fields['incident_type'].required = True
+        self.fields['department'].required = True
+        self.fields['priority'].required = True
+        
+        # Add help texts
+        self.fields['location'].help_text = "Enter address or use the GPS button to get your current location"
+        self.fields['priority'].help_text = "Select the urgency level of this incident"
+        self.fields['incident_type'].help_text = "Choose the type of incident"
+        self.fields['department'].help_text = "Select which department should handle this report"

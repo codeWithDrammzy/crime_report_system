@@ -3,190 +3,669 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-
-
-    <div id="reportFormSection" class="hidden min-h-[80vh] flex flex-col justify-center items-center bg-gray-50 p-10">
-  <div class="w-full max-w-6xl bg-white p-8 rounded-2xl shadow-md border border-gray-200">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📝 Submit New Crime Report</h2>
-
-    <form method="POST" enctype="multipart/form-data" class="space-y-5">
-      {% csrf_token %}
-      
-      <!-- Two-column form layout -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Left Column -->
-        <div class="space-y-4">
-          {% for field in form %}
-            {% if forloop.counter0|divisibleby:2 %}  <!-- Even indices (0, 2, 4...) -->
-              <div class="form-group">
-                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                  {{ field.label }}
-                  {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
-                </label>
-                
-                {% if field.name == "department" or field.name == "incident_type" %}
-                  <!-- Select field for department and incident_type -->
-                  <select name="{{ field.name }}" 
-                          id="{{ field.id_for_label }}" 
-                          class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          {% if field.field.required %}required{% endif %}>
-                    <option value="">Select {{ field.label }}</option>
-                    {% for choice in field.field.choices %}
-                      {% if choice.0 != '' %}
-                        <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
-                          {{ choice.1 }}
-                        </option>
-                      {% endif %}
-                    {% endfor %}
-                  </select>
-                {% else %}
-                  <!-- Regular input field -->
-                  <input type="{{ field.field.widget.input_type }}" 
-                         name="{{ field.name }}" 
-                         id="{{ field.id_for_label }}" 
-                         class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         value="{{ field.value|default:'' }}"
-                         {% if field.field.required %}required{% endif %}>
-                {% endif %}
-                
-                {% if field.help_text %}
-                  <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
-                {% endif %}
-                {% for error in field.errors %}
-                  <p class="text-xs text-red-500 mt-1">{{ error }}</p>
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endfor %}
-        </div>
+<!-- Main Content -->
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- Right Column -->
-        <div class="space-y-4">
-          {% for field in form %}
-            {% if not forloop.counter0|divisibleby:2 %}  <!-- Odd indices (1, 3, 5...) -->
-              <div class="form-group">
-                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                  {{ field.label }}
-                  {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
-                </label>
-                
-                {% if field.name == "department" or field.name == "incident_type" %}
-                  <!-- Select field for department and incident_type -->
-                  <select name="{{ field.name }}" 
-                          id="{{ field.id_for_label }}" 
-                          class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          {% if field.field.required %}required{% endif %}>
-                    <option value="">Select {{ field.label }}</option>
-                    {% for choice in field.field.choices %}
-                      {% if choice.0 != '' %}
-                        <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
-                          {{ choice.1 }}
-                        </option>
-                      {% endif %}
-                    {% endfor %}
-                  </select>
-                {% else %}
-                  <!-- Regular input field -->
-                  <input type="{{ field.field.widget.input_type }}" 
-                         name="{{ field.name }}" 
-                         id="{{ field.id_for_label }}" 
-                         class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         value="{{ field.value|default:'' }}"
-                         {% if field.field.required %}required{% endif %}>
-                {% endif %}
-                
-                {% if field.help_text %}
-                  <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
-                {% endif %}
-                {% for error in field.errors %}
-                  <p class="text-xs text-red-500 mt-1">{{ error }}</p>
-                {% endfor %}
-              </div>
-            {% endif %}
-          {% endfor %}
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Report a Crime</h1>
+            <p class="text-gray-600 mt-2">Help keep your community safe by reporting criminal activities</p>
         </div>
-      </div>
 
-      <!-- ✅ Multimedia Evidence Section (Full width) -->
-      <div class="border-t pt-6 mt-6">
-          <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">📷 Multimedia Evidence</h3>
+        <!-- Progress Steps -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div class="flex items-center justify-between max-w-2xl mx-auto">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold">1</div>
+                    <span class="ml-2 text-sm font-medium text-blue-600">Crime Details</span>
+                </div>
+                <div class="flex-1 h-1 bg-blue-200 mx-4"></div>
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-semibold">2</div>
+                    <span class="ml-2 text-sm font-medium text-gray-500">Evidence</span>
+                </div>
+                <div class="flex-1 h-1 bg-gray-200 mx-4"></div>
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-300 text-gray-600 flex items-center justify-center font-semibold">3</div>
+                    <span class="ml-2 text-sm font-medium text-gray-500">Review & Submit</span>
+                </div>
+            </div>
+        </div>
 
-          <!-- Three columns in one line -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              <!-- Photo Capture Column -->
-              <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
-                  <h4 class="font-semibold text-gray-700 mb-3">📸 Photo</h4>
-                  <video id="cameraPreview" class="mx-auto rounded-md hidden w-full max-w-xs" autoplay></video>
-                  <canvas id="photoCanvas" class="hidden"></canvas>
-                  <div id="photoPreviewContainer" class="my-3"></div>
+        <!-- Display Messages -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-700{% else %}bg-green-50 border border-green-200 text-green-700{% endif %} rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="{% if message.tags == 'error' %}fas fa-exclamation-circle{% else %}fas fa-check-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-                  <div class="space-y-2">
-                      <button type="button" id="openCameraBtn"
-                          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                          Open Camera
-                      </button>
-                      <button type="button" id="takePhotoBtn"
-                          class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                          Take Photo
-                      </button>
-                  </div>
+        <form method="POST" enctype="multipart/form-data" class="space-y-6" id="crimeReportForm">
+            {% csrf_token %}
+            
+            <!-- Crime Information Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">📋 Crime Information</h2>
+                
+                <!-- Two-column layout for form fields -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-6">
+                        <!-- Title -->
+                        <div>
+                            <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Report Title *
+                            </label>
+                            <input type="text" 
+                                   name="title" 
+                                   id="{{ form.title.id_for_label }}" 
+                                   class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                   placeholder="Enter report title"
+                                   value="{{ form.title.value|default:'' }}"
+                                   required>
+                            {% if form.title.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.title.errors.0 }}</p>
+                            {% endif %}
+                        </div>
 
-                  <input type="file" name="photo_file" id="photoFileInput" accept="image/*" class="hidden" />
-              </div>
+                        <!-- Incident Type -->
+                        <div>
+                            <label for="{{ form.incident_type.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Incident Type *
+                            </label>
+                            <select name="incident_type" 
+                                    id="{{ form.incident_type.id_for_label }}" 
+                                    class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required>
+                                <option value="">Select incident type</option>
+                                {% for value, label in form.fields.incident_type.choices %}
+                                    <option value="{{ value }}" {% if form.incident_type.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.incident_type.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.incident_type.help_text }}</p>
+                            {% endif %}
+                            {% if form.incident_type.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.incident_type.errors.0 }}</p>
+                            {% endif %}
+                        </div>
 
-              <!-- Video Recording Column -->
-              <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
-                  <h4 class="font-semibold text-gray-700 mb-3">🎥 Video</h4>
-                  <video id="videoPreview" class="mx-auto rounded-md hidden w-full max-w-xs" controls></video>
-                  
-                  <div class="space-y-2">
-                      <button type="button" id="startVideoBtn"
-                          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                          Start Recording
-                      </button>
-                      <button type="button" id="stopVideoBtn"
-                          class="hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                          Stop Recording
-                      </button>
-                  </div>
+                        <!-- Priority -->
+                        <div>
+                            <label for="{{ form.priority.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Priority Level *
+                            </label>
+                            <select name="priority" 
+                                    id="{{ form.priority.id_for_label }}" 
+                                    class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required>
+                                <option value="">Select priority</option>
+                                {% for value, label in form.fields.priority.choices %}
+                                    <option value="{{ value }}" {% if form.priority.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.priority.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.priority.help_text }}</p>
+                            {% endif %}
+                            {% if form.priority.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.priority.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                  <input type="file" name="video_file" id="videoFileInput" accept="video/*" class="hidden" />
-              </div>
+                    <!-- Right Column -->
+                    <div class="space-y-6">
+                        <!-- Department -->
+                        <div>
+                            <label for="{{ form.department.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Report to Department *
+                            </label>
+                            <select name="department" 
+                                    id="{{ form.department.id_for_label }}" 
+                                    class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required>
+                                <option value="">Select department</option>
+                                {% for value, label in form.fields.department.choices %}
+                                    <option value="{{ value }}" {% if form.department.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            {% if form.department.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.department.help_text }}</p>
+                            {% endif %}
+                            {% if form.department.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.department.errors.0 }}</p>
+                            {% endif %}
+                        </div>
 
-              <!-- Audio Recording Column -->
-              <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
-                  <h4 class="font-semibold text-gray-700 mb-3">🎤 Audio</h4>
-                  <audio id="audioPreview" class="mx-auto hidden w-full" controls></audio>
-                  
-                  <div class="space-y-2">
-                      <button type="button" id="startAudioBtn"
-                          class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                          Record Voice
-                      </button>
-                      <button type="button" id="stopAudioBtn"
-                          class="hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                          Stop
-                      </button>
-                  </div>
+                        <!-- Location with GPS -->
+                        <div>
+                            <label for="locationInput" class="block text-sm font-medium text-gray-700 mb-2">
+                                Location *
+                            </label>
+                            <div class="flex space-x-3">
+                                <input type="text" 
+                                       name="location" 
+                                       id="locationInput" 
+                                       class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="Enter location or use GPS button below"
+                                       value="{{ form.location.value|default:'' }}"
+                                       required>
+                                <button type="button" id="getLocationBtn" 
+                                    class="whitespace-nowrap bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>GPS
+                                </button>
+                            </div>
+                            {% if form.location.help_text %}
+                                <p class="text-gray-500 text-xs mt-1">{{ form.location.help_text }}</p>
+                            {% endif %}
+                            {% if form.location.errors %}
+                                <p class="text-red-500 text-xs mt-1">{{ form.location.errors.0 }}</p>
+                            {% endif %}
+                            <!-- GPS Coordinates Display -->
+                            <div id="gpsCoordinates" class="hidden mt-2 p-2 bg-green-50 rounded-lg">
+                                <p class="text-green-700 text-sm">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Location captured: <span id="coordinatesText"></span>
+                                </p>
+                            </div>
+                        </div>
 
-                  <input type="file" name="audio_file" id="audioFileInput" accept="audio/*" class="hidden" />
-              </div>
-          </div>
-      </div>
-      <!-- Submit Buttons -->
-      <div class="flex justify-center space-x-4 mt-8">
-        <button type="submit"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow transition">
-          Submit Report
-        </button>
-        <button type="button" id="cancelFormBtn"
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg shadow transition">
-          Cancel
-        </button>
-      </div>
-    </form>
-  </div>
+                        <!-- Hidden GPS Fields -->
+                        <input type="hidden" name="latitude" id="latitudeField" value="{{ form.latitude.value|default:'' }}">
+                        <input type="hidden" name="longitude" id="longitudeField" value="{{ form.longitude.value|default:'' }}">
+                    </div>
+                </div>
+
+                <!-- Description (Full Width) -->
+                <div class="mt-6">
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                        Incident Description *
+                    </label>
+                    <textarea name="description" 
+                              id="{{ form.description.id_for_label }}" 
+                              rows="4"
+                              class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Describe the incident in detail..."
+                              required>{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Evidence Collection Card -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6">📷 Evidence Collection</h2>
+                <p class="text-gray-600 mb-6">Add photos, videos, or audio recordings as evidence (optional but recommended)</p>
+
+                <!-- Three columns for media types -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Photo Capture -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
+                        <h4 class="font-semibold text-gray-700 mb-3">📸 Photo Evidence</h4>
+                        <video id="cameraPreview" class="mx-auto rounded-md hidden w-full max-w-xs" autoplay></video>
+                        <canvas id="photoCanvas" class="hidden"></canvas>
+                        <div id="photoPreviewContainer" class="my-3"></div>
+
+                        <div class="space-y-2">
+                            <button type="button" id="openCameraBtn"
+                                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
+                                Open Camera
+                            </button>
+                            <button type="button" id="takePhotoBtn"
+                                class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
+                                Take Photo
+                            </button>
+                            <div class="text-center text-xs text-gray-500 mt-2">or</div>
+                            <label for="photoFileInput" class="block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow text-sm w-full cursor-pointer text-center">
+                                Upload Photo
+                            </label>
+                        </div>
+
+                        <!-- Hidden file inputs for photo -->
+                        <input type="file" name="photo_file" id="photoFileInput" accept="image/*" class="hidden">
+                        <input type="file" name="evidence_image" id="evidenceImageInput" accept="image/*" class="hidden">
+                    </div>
+
+                    <!-- Video Recording -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
+                        <h4 class="font-semibold text-gray-700 mb-3">🎥 Video Evidence</h4>
+                        <video id="videoPreview" class="mx-auto rounded-md hidden w-full max-w-xs" controls></video>
+                        
+                        <div class="space-y-2">
+                            <button type="button" id="startVideoBtn"
+                                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
+                                Start Recording
+                            </button>
+                            <button type="button" id="stopVideoBtn"
+                                class="hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
+                                Stop Recording
+                            </button>
+                            <div class="text-center text-xs text-gray-500 mt-2">or</div>
+                            <label for="videoFileInput" class="block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow text-sm w-full cursor-pointer text-center">
+                                Upload Video
+                            </label>
+                        </div>
+
+                        <!-- Hidden file inputs for video -->
+                        <input type="file" name="video_file" id="videoFileInput" accept="video/*" class="hidden">
+                        <input type="file" name="evidence_video" id="evidenceVideoInput" accept="video/*" class="hidden">
+                    </div>
+
+                    <!-- Audio Recording -->
+                    <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
+                        <h4 class="font-semibold text-gray-700 mb-3">🎤 Audio Evidence</h4>
+                        <audio id="audioPreview" class="mx-auto hidden w-full" controls></audio>
+                        
+                        <div class="space-y-2">
+                            <button type="button" id="startAudioBtn"
+                                class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
+                                Record Voice
+                            </button>
+                            <button type="button" id="stopAudioBtn"
+                                class="hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
+                                Stop
+                            </button>
+                            <div class="text-center text-xs text-gray-500 mt-2">or</div>
+                            <label for="audioFileInput" class="block bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg shadow text-sm w-full cursor-pointer text-center">
+                                Upload Audio
+                            </label>
+                        </div>
+
+                        <!-- Hidden file inputs for audio -->
+                        <input type="file" name="audio_file" id="audioFileInput" accept="audio/*" class="hidden">
+                        <input type="file" name="evidence_audio" id="evidenceAudioInput" accept="audio/*" class="hidden">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Section -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">Ready to Submit</h3>
+                        <p class="text-gray-600 text-sm">Review your information before submitting</p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <a href="{% url 'user-board' %}" 
+                           class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                            class="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition flex items-center">
+                            <i class="fas fa-paper-plane mr-2"></i>Submit Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Help Text -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-500 text-sm">
+                <i class="fas fa-shield-alt mr-1"></i>
+                Your report will be securely submitted and handled by the appropriate authorities.
+            </p>
+        </div>
+    </div>
 </div>
 
-{% endblock %}
+<!-- GPS Location Modal -->
+<div id="gpsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-gray-800 mb-4">📍 Get Your Location</h3>
+        <p class="text-gray-600 mb-6">We need your location to accurately report the crime incident.</p>
+        
+        <div class="space-y-4">
+            <div id="locationStatus" class="bg-blue-50 p-4 rounded-lg">
+                <p class="text-blue-700 text-sm">Click the button below to get your current location.</p>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="getLocationModalBtn" class="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                    <i class="fas fa-map-marker-alt mr-2"></i>Get Location
+                </button>
+                <button id="cancelLocationBtn" class="px-6 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition">
+                    Cancel
+                </button>
+            </div>
+            
+            <div id="locationResult" class="hidden">
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <p class="text-green-700 text-sm font-semibold">Location captured successfully!</p>
+                    <p id="coordinates" class="text-green-600 text-xs mt-1"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const gpsModal = document.getElementById('gpsModal');
+        const getLocationBtn = document.getElementById('getLocationBtn');
+        const getLocationModalBtn = document.getElementById('getLocationModalBtn');
+        const cancelLocationBtn = document.getElementById('cancelLocationBtn');
+        const locationStatus = document.getElementById('locationStatus');
+        const locationResult = document.getElementById('locationResult');
+        const coordinates = document.getElementById('coordinates');
+        const coordinatesText = document.getElementById('coordinatesText');
+        const gpsCoordinates = document.getElementById('gpsCoordinates');
+        const locationInput = document.getElementById('locationInput');
+        const latitudeField = document.getElementById('latitudeField');
+        const longitudeField = document.getElementById('longitudeField');
+
+        // Show GPS modal when GPS button is clicked
+        getLocationBtn.addEventListener('click', function() {
+            gpsModal.classList.remove('hidden');
+        });
+
+        // Hide GPS modal
+        cancelLocationBtn.addEventListener('click', function() {
+            gpsModal.classList.add('hidden');
+        });
+
+        // Get location from modal
+        getLocationModalBtn.addEventListener('click', getLocation);
+
+        function getLocation() {
+            locationStatus.innerHTML = '<p class="text-blue-700 text-sm">🔄 Getting your location...</p>';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        // Display coordinates
+                        coordinates.textContent = `Latitude: ${lat.toFixed(6)}, Longitude: ${lng.toFixed(6)}`;
+                        coordinatesText.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        
+                        // Set form values
+                        latitudeField.value = lat;
+                        longitudeField.value = lng;
+                        
+                        // Reverse geocode to get address (simplified - in production use a geocoding service)
+                        locationInput.value = `GPS Location: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        
+                        // Show success
+                        locationResult.classList.remove('hidden');
+                        gpsCoordinates.classList.remove('hidden');
+                        locationStatus.innerHTML = '<p class="text-green-700 text-sm">✅ Location captured successfully!</p>';
+                        
+                        // Auto-close modal after 2 seconds
+                        setTimeout(() => {
+                            gpsModal.classList.add('hidden');
+                        }, 2000);
+                    },
+                    function(error) {
+                        let errorMessage = 'Unable to get your location. ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Please allow location access in your browser settings.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'Location request timed out.';
+                                break;
+                            default:
+                                errorMessage += 'An unknown error occurred.';
+                                break;
+                        }
+                        locationStatus.innerHTML = `<p class="text-red-700 text-sm">❌ ${errorMessage}</p>`;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    }
+                );
+            } else {
+                locationStatus.innerHTML = '<p class="text-red-700 text-sm">❌ Geolocation is not supported by this browser.</p>';
+            }
+        }
+
+        // Close modal when clicking outside
+        gpsModal.addEventListener('click', function(e) {
+            if (e.target === gpsModal) {
+                gpsModal.classList.add('hidden');
+            }
+        });
+
+        // ======== CAMERA (Photo Capture) =========
+        const openCameraBtn = document.getElementById('openCameraBtn');
+        const takePhotoBtn = document.getElementById('takePhotoBtn');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const photoCanvas = document.getElementById('photoCanvas');
+        const photoFileInput = document.getElementById('photoFileInput');
+        const evidenceImageInput = document.getElementById('evidenceImageInput');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+        let cameraStream;
+
+        openCameraBtn.onclick = async () => {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraPreview.srcObject = cameraStream;
+                cameraPreview.classList.remove('hidden');
+                takePhotoBtn.classList.remove('hidden');
+                openCameraBtn.classList.add('hidden');
+            } catch (error) {
+                alert('Error accessing camera: ' + error.message);
+            }
+        };
+
+        takePhotoBtn.onclick = () => {
+            const context = photoCanvas.getContext('2d');
+            photoCanvas.width = cameraPreview.videoWidth;
+            photoCanvas.height = cameraPreview.videoHeight;
+            context.drawImage(cameraPreview, 0, 0);
+            photoCanvas.toBlob(blob => {
+                const file = new File([blob], 'crime_photo.jpg', { type: 'image/jpeg' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                
+                // Set BOTH file inputs
+                photoFileInput.files = dataTransfer.files;
+                evidenceImageInput.files = dataTransfer.files;
+                console.log("Photo captured and set to both inputs");
+
+                // preview
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.classList.add('mx-auto', 'rounded-md', 'mt-3', 'max-h-32', 'border', 'border-gray-300');
+                photoPreviewContainer.innerHTML = '';
+                photoPreviewContainer.appendChild(img);
+
+                // Stop camera
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraPreview.classList.add('hidden');
+                takePhotoBtn.classList.add('hidden');
+                openCameraBtn.classList.remove('hidden');
+            }, 'image/jpeg');
+        };
+
+        // ======== VIDEO RECORDING =========
+        const startVideoBtn = document.getElementById('startVideoBtn');
+        const stopVideoBtn = document.getElementById('stopVideoBtn');
+        const videoPreview = document.getElementById('videoPreview');
+        const videoFileInput = document.getElementById('videoFileInput');
+        const evidenceVideoInput = document.getElementById('evidenceVideoInput');
+        let videoRecorder, videoChunks = [];
+
+        startVideoBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                videoRecorder = new MediaRecorder(stream);
+                videoChunks = [];
+
+                videoRecorder.ondataavailable = e => videoChunks.push(e.data);
+                videoRecorder.onstop = () => {
+                    const blob = new Blob(videoChunks, { type: 'video/mp4' });
+                    const file = new File([blob], 'crime_video.mp4', { type: 'video/mp4' });
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    
+                    // Set BOTH file inputs
+                    videoFileInput.files = dt.files;
+                    evidenceVideoInput.files = dt.files;
+                    console.log("Video captured and set to both inputs");
+
+                    videoPreview.src = URL.createObjectURL(blob);
+                    videoPreview.classList.remove('hidden');
+                };
+
+                videoRecorder.start();
+                startVideoBtn.classList.add('hidden');
+                stopVideoBtn.classList.remove('hidden');
+            } catch (error) {
+                alert('Error accessing camera/microphone: ' + error.message);
+            }
+        };
+
+        stopVideoBtn.onclick = () => {
+            videoRecorder.stop();
+            videoRecorder.stream.getTracks().forEach(track => track.stop());
+            startVideoBtn.classList.remove('hidden');
+            stopVideoBtn.classList.add('hidden');
+        };
+
+        // ======== AUDIO RECORDING =========
+        const startAudioBtn = document.getElementById('startAudioBtn');
+        const stopAudioBtn = document.getElementById('stopAudioBtn');
+        const audioPreview = document.getElementById('audioPreview');
+        const audioFileInput = document.getElementById('audioFileInput');
+        const evidenceAudioInput = document.getElementById('evidenceAudioInput');
+        let audioRecorder, audioChunks = [];
+
+        startAudioBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                audioRecorder.ondataavailable = e => audioChunks.push(e.data);
+                audioRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    const file = new File([blob], 'crime_audio.mp3', { type: 'audio/mp3' });
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    
+                    // Set BOTH file inputs
+                    audioFileInput.files = dt.files;
+                    evidenceAudioInput.files = dt.files;
+                    console.log("Audio captured and set to both inputs");
+
+                    audioPreview.src = URL.createObjectURL(blob);
+                    audioPreview.classList.remove('hidden');
+                };
+
+                audioRecorder.start();
+                startAudioBtn.classList.add('hidden');
+                stopAudioBtn.classList.remove('hidden');
+            } catch (error) {
+                alert('Error accessing microphone: ' + error.message);
+            }
+        };
+
+        stopAudioBtn.onclick = () => {
+            audioRecorder.stop();
+            audioRecorder.stream.getTracks().forEach(track => track.stop());
+            startAudioBtn.classList.remove('hidden');
+            stopAudioBtn.classList.add('hidden');
+        };
+
+        // File upload handlers for manual uploads
+        document.getElementById('photoFileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(e.target.files[0]);
+                evidenceImageInput.files = dataTransfer.files;
+                
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(e.target.files[0]);
+                img.classList.add('mx-auto', 'rounded-md', 'mt-3', 'max-h-32', 'border', 'border-gray-300');
+                photoPreviewContainer.innerHTML = '';
+                photoPreviewContainer.appendChild(img);
+                console.log("Photo uploaded manually");
+            }
+        });
+
+        document.getElementById('videoFileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(e.target.files[0]);
+                evidenceVideoInput.files = dataTransfer.files;
+                
+                videoPreview.src = URL.createObjectURL(e.target.files[0]);
+                videoPreview.classList.remove('hidden');
+                console.log("Video uploaded manually");
+            }
+        });
+
+        document.getElementById('audioFileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(e.target.files[0]);
+                evidenceAudioInput.files = dataTransfer.files;
+                
+                audioPreview.src = URL.createObjectURL(e.target.files[0]);
+                audioPreview.classList.remove('hidden');
+                console.log("Audio uploaded manually");
+            }
+        });
+
+        // Form submission handler for debugging
+        document.getElementById('crimeReportForm').addEventListener('submit', function(e) {
+            console.log("Form submitted - checking data:");
+            console.log("Title:", document.getElementById('{{ form.title.id_for_label }}').value);
+            console.log("Description:", document.getElementById('{{ form.description.id_for_label }}').value);
+            console.log("Location:", document.getElementById('locationInput').value);
+            console.log("Incident Type:", document.getElementById('{{ form.incident_type.id_for_label }}').value);
+            console.log("Department:", document.getElementById('{{ form.department.id_for_label }}').value);
+            console.log("Priority:", document.getElementById('{{ form.priority.id_for_label }}').value);
+            console.log("Latitude:", latitudeField.value);
+            console.log("Longitude:", longitudeField.value);
+            console.log("Photo files:", photoFileInput.files.length, evidenceImageInput.files.length);
+            console.log("Video files:", videoFileInput.files.length, evidenceVideoInput.files.length);
+            console.log("Audio files:", audioFileInput.files.length, evidenceAudioInput.files.length);
+        });
+    });
+</script>
+
+<style>
+    /* Custom styles for better form appearance */
+    .form-control:focus {
+        outline: none;
+        ring: 2px solid #3b82f6;
+        border-color: transparent;
+    }
+
+    /* Smooth transitions */
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    /* Hide file input labels */
+    input[type="file"] {
+        display: none;
+    }
+
+    /* Required field indicator */
+    .required::after {
+        content: " *";
+        color: #ef4444;
+    }
+</style>
+
+{% endblock content %}

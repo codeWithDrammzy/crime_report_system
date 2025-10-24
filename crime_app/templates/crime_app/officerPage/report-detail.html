@@ -9,7 +9,8 @@
         <h2 class="text-2xl font-semibold text-gray-800">
             🕵️ Report Details — {{ crime.incident_type }}
         </h2>
-        <a href="{{ request.META.HTTP_REFERER }}" 
+        {% comment %} href="{{ request.META.HTTP_REFERER }}"  {% endcomment %}
+        <a href="{% url 'officer-board' %}" 
            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
            ← Back
         </a>

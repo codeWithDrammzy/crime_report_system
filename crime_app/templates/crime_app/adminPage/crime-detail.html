@@ -6,16 +6,22 @@
 
   <!-- Header -->
   <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-bold text-gray-700">🕵️ Crime Report Detail</h1>
+    <h1 class="text-2xl font-bold text-gray-700 flex items-center">
+      <i class="fas fa-search text-blue-600 mr-2"></i>
+      Crime Report Detail
+    </h1>
     <a href="{{ request.META.HTTP_REFERER }}" 
-       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-       ← Back
+       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+       <i class="fas fa-arrow-left mr-2"></i>Back
     </a>
   </div>
 
   <!-- Reporter Info -->
   <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-    <h2 class="text-lg font-semibold text-gray-600 mb-3">Reporter Information</h2>
+    <h2 class="text-lg font-semibold text-gray-600 mb-3 flex items-center">
+      <i class="fas fa-user text-blue-600 mr-2"></i>
+      Reporter Information
+    </h2>
     <div class="flex items-center space-x-4">
       {% if report.reporter and report.reporter.officer.profile_picture %}
         <img src="{{ report.reporter.officer.profile_picture.url }}" 
@@ -34,46 +40,151 @@
     </div>
   </div>
 
-  <!-- Crime Details -->
-  <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-    <h2 class="text-lg font-semibold text-gray-600 mb-3">Crime Information</h2>
-    <ul class="space-y-2 flex justify-between m-8 p-2">
-      <div>
-         <li><strong>Report ID:</strong> {{ report.report_id }}</li>
-        <li><strong>Report Status:</strong> {{ report.status }}</li>
-        <li><strong>Incident Type:</strong> {{ report.incident_type|title }}</li>
-      </div>
-      <div>
-        <li><strong>Department:</strong> {{ report.department.name|default:"Unassigned" }}</li>
-          <li><strong>Location:</strong> {{ report.location }}</li>
-          <li><strong>Description:</strong></li>
-          <p class="text-gray-700 bg-white p-3 rounded-lg border border-gray-100">
-            {{ report.description|linebreaks }}
+  <!-- Crime Details & Map Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Crime Details -->
+    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-600 mb-3 flex items-center">
+        <i class="fas fa-info-circle text-blue-600 mr-2"></i>
+        Crime Information
+      </h2>
+      <div class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p><strong class="text-gray-700">Report ID:</strong></p>
+            <p class="text-blue-600 font-mono font-bold">#{{ report.report_id }}</p>
+          </div>
+          <div>
+            <p><strong class="text-gray-700">Status:</strong></p>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold
+              {% if report.status == 'Pending' %}bg-yellow-100 text-yellow-800 border border-yellow-200
+              {% elif report.status == 'Resolved' %}bg-green-100 text-green-800 border border-green-200
+              {% elif report.status == 'Investigating' %}bg-blue-100 text-blue-800 border border-blue-200
+              {% else %}bg-gray-100 text-gray-800 border border-gray-200{% endif %}">
+              {{ report.status }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p><strong class="text-gray-700">Incident Type:</strong></p>
+            <p class="text-gray-800">{{ report.incident_type|title }}</p>
+          </div>
+          <div>
+            <p><strong class="text-gray-700">Department:</strong></p>
+            <p class="text-gray-800">{{ report.department.name|default:"Unassigned" }}</p>
+          </div>
+        </div>
+
+        <div>
+          <p><strong class="text-gray-700">Location:</strong></p>
+          <p class="text-gray-800 flex items-center">
+            <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+            {{ report.location }}
           </p>
+          {% if report.latitude and report.longitude %}
+          <p class="text-xs text-gray-500 mt-1">
+            GPS: {{ report.latitude|floatformat:6 }}, {{ report.longitude|floatformat:6 }}
+          </p>
+          {% endif %}
+        </div>
+
+        <div>
+          <p><strong class="text-gray-700">Description:</strong></p>
+          <div class="text-gray-700 bg-white p-4 rounded-lg border border-gray-100 mt-2">
+            {{ report.description|linebreaks }}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+          <div>
+            <p><strong>Reported:</strong> {{ report.date_reported|date:"M d, Y H:i" }}</p>
+          </div>
+          <div>
+            <p><strong>Last Updated:</strong> {{ report.date_updated|date:"M d, Y H:i" }}</p>
+          </div>
+        </div>
       </div>
-     
+    </div>
+
+    <!-- Map Section -->
+    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-600 mb-3 flex items-center">
+        <i class="fas fa-map-marked-alt text-green-600 mr-2"></i>
+        Incident Location
+      </h2>
       
-    </ul>
+      <div id="mapContainer" class="rounded-lg overflow-hidden border border-gray-300 bg-gray-100">
+        {% if report.latitude and report.longitude %}
+          <!-- Interactive Map -->
+          <div id="map" class="w-full h-80 rounded-lg"></div>
+          <div class="p-3 bg-white border-t border-gray-200">
+            <p class="text-sm text-gray-600 flex items-center justify-between">
+              <span>
+                <i class="fas fa-crosshairs text-red-500 mr-1"></i>
+                Exact GPS Location Available
+              </span>
+              <span class="text-xs font-mono">
+                {{ report.latitude|floatformat:6 }}, {{ report.longitude|floatformat:6 }}
+              </span>
+            </p>
+          </div>
+        {% else %}
+          <!-- Static Map Fallback -->
+          <div class="w-full h-80 bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center rounded-lg">
+            <div class="text-center text-gray-500">
+              <i class="fas fa-map-marked-alt text-4xl mb-3 text-gray-300"></i>
+              <p class="font-semibold">Location Map</p>
+              <p class="text-sm mt-1">No GPS coordinates available</p>
+              <p class="text-xs mt-2 text-gray-400">Reported location: {{ report.location }}</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Location Actions -->
+      <div class="mt-4 flex gap-2">
+        {% if report.latitude and report.longitude %}
+        <button onclick="openInGoogleMaps()" 
+                class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm font-semibold transition flex items-center justify-center">
+          <i class="fab fa-google mr-2"></i>Open in Google Maps
+        </button>
+        <button onclick="copyCoordinates()" 
+                class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-lg text-sm font-semibold transition flex items-center justify-center">
+          <i class="fas fa-copy mr-2"></i>Copy GPS
+        </button>
+        {% endif %}
+      </div>
+    </div>
   </div>
 
   <!-- Evidence Section -->
   <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-    <h2 class="text-lg font-semibold text-gray-600 mb-3">Evidence Files</h2>
+    <h2 class="text-lg font-semibold text-gray-600 mb-3 flex items-center">
+      <i class="fas fa-camera text-purple-600 mr-2"></i>
+      Evidence Files
+    </h2>
 
     <div class="grid md:grid-cols-3 gap-6">
       {% if report.evidence_image %}
       <div>
-        <p class="text-sm text-gray-500 mb-2">📸 Image Evidence:</p>
+        <p class="text-sm text-gray-500 mb-2 flex items-center">
+          <i class="fas fa-image text-green-600 mr-2"></i>Image Evidence
+        </p>
         <img src="{{ report.evidence_image.url }}" 
              alt="Evidence Image" 
-             class="rounded-xl border border-gray-200 shadow-sm w-full">
+             class="rounded-xl border border-gray-200 shadow-sm w-full h-48 object-cover cursor-pointer"
+             onclick="openModal(this.src)">
       </div>
       {% endif %}
 
       {% if report.evidence_video %}
       <div>
-        <p class="text-sm text-gray-500 mb-2">🎥 Video Evidence:</p>
-        <video controls class="rounded-xl border border-gray-200 w-full">
+        <p class="text-sm text-gray-500 mb-2 flex items-center">
+          <i class="fas fa-video text-blue-600 mr-2"></i>Video Evidence
+        </p>
+        <video controls class="rounded-xl border border-gray-200 w-full h-48 object-cover">
           <source src="{{ report.evidence_video.url }}" type="video/mp4">
           Your browser does not support the video tag.
         </video>
@@ -82,19 +193,33 @@
 
       {% if report.evidence_audio %}
       <div>
-        <p class="text-sm text-gray-500 mb-2">🎙️ Audio Evidence:</p>
-        <audio controls class="w-full">
-          <source src="{{ report.evidence_audio.url }}" type="audio/mpeg">
-          Your browser does not support the audio element.
-        </audio>
+        <p class="text-sm text-gray-500 mb-2 flex items-center">
+          <i class="fas fa-volume-up text-orange-600 mr-2"></i>Audio Evidence
+        </p>
+        <div class="bg-white p-4 rounded-xl border border-gray-200">
+          <audio controls class="w-full">
+            <source src="{{ report.evidence_audio.url }}" type="audio/mpeg">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
       </div>
       {% endif %}
     </div>
+
+    {% if not report.evidence_image and not report.evidence_video and not report.evidence_audio %}
+    <div class="text-center py-8 text-gray-500">
+      <i class="fas fa-file-import text-4xl mb-3 text-gray-300"></i>
+      <p>No evidence files attached to this report</p>
+    </div>
+    {% endif %}
   </div>
 
   <!-- Manage Section -->
   <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-    <h2 class="text-lg font-semibold text-gray-600 mb-3">🛠 Manage Report</h2>
+    <h2 class="text-lg font-semibold text-gray-600 mb-3 flex items-center">
+      <i class="fas fa-cog text-yellow-600 mr-2"></i>
+      Manage Report
+    </h2>
     
     <form method="POST" action="{% url 'update-report-status' report.id %}" class="space-y-4">
       {% csrf_token %}
@@ -103,7 +228,7 @@
         <!-- Status -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Update Status</label>
-          <select name="status" class="border border-gray-300 rounded-lg p-2 w-full">
+          <select name="status" class="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="Pending" {% if report.status == "Pending" %}selected{% endif %}>Pending</option>
             <option value="Investigating" {% if report.status == "Investigating" %}selected{% endif %}>Investigating</option>
             <option value="Resolved" {% if report.status == "Resolved" %}selected{% endif %}>Resolved</option>
@@ -113,7 +238,7 @@
         <!-- Department -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Reassign to Department</label>
-          <select name="department" class="border border-gray-300 rounded-lg p-2 w-full">
+          <select name="department" class="border border-gray-300 rounded-lg p-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="">-- Select Department --</option>
             {% for dept in departments %}
             <option value="{{ dept.id }}" {% if report.department and report.department.id == dept.id %}selected{% endif %}>
@@ -126,13 +251,97 @@
 
       <div class="flex justify-end mt-4">
         <button type="submit" 
-                class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg shadow">
-          ✅ Update Report
+                class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg shadow transition flex items-center">
+          <i class="fas fa-check-circle mr-2"></i>Update Report
         </button>
       </div>
     </form>
   </div>
 
 </div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center hidden z-50 p-4">
+  <div class="max-w-4xl max-h-full">
+    <img id="modalImage" src="" alt="Evidence" class="max-w-full max-h-full rounded-lg">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-white text-2xl bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-75">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Load Leaflet CSS & JS for maps -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  .leaflet-container {
+    height: 320px;
+    width: 100%;
+    border-radius: 0.5rem;
+  }
+</style>
+
+<script>
+  // Initialize map if coordinates are available
+  {% if report.latitude and report.longitude %}
+  document.addEventListener('DOMContentLoaded', function() {
+    const lat = {{ report.latitude }};
+    const lng = {{ report.longitude }};
+    
+    const map = L.map('map').setView([lat, lng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    L.marker([lat, lng])
+      .addTo(map)
+      .bindPopup(`
+        <div class="text-center">
+          <strong>Crime Location</strong><br>
+          {{ report.location|escapejs }}<br>
+          <small>Report ID: #{{ report.report_id }}</small>
+        </div>
+      `)
+      .openPopup();
+  });
+  {% endif %}
+
+  // Open in Google Maps
+  function openInGoogleMaps() {
+    const lat = {{ report.latitude|default:0 }};
+    const lng = {{ report.longitude|default:0 }};
+    if (lat && lng) {
+      window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+    }
+  }
+
+  // Copy coordinates to clipboard
+  function copyCoordinates() {
+    const lat = {{ report.latitude|default:0 }};
+    const lng = {{ report.longitude|default:0 }};
+    if (lat && lng) {
+      navigator.clipboard.writeText(`${lat}, ${lng}`)
+        .then(() => alert('GPS coordinates copied to clipboard!'))
+        .catch(() => alert('Failed to copy coordinates'));
+    }
+  }
+
+  // Image modal functions
+  function openModal(src) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('imageModal').classList.add('hidden');
+  }
+
+  // Close modal on background click
+  document.getElementById('imageModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
 
 {% endblock %}

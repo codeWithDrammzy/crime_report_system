@@ -7,11 +7,17 @@
     <title>Dashboard | QuickReport Nigeria</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Ensure content doesn't hide behind fixed navbar */
+        body {
+            padding-top: 80px; /* Adjust based on your navbar height */
+        }
+    </style>
 </head>
 <body class="bg-gray-50 font-sans">
     
-    <!-- Navbar -->
-    <nav class="bg-blue-900 text-white shadow-lg">
+    <!-- Fixed Navbar -->
+    <nav class="bg-blue-900 text-white shadow-lg fixed top-0 left-0 right-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <!-- Logo -->
@@ -20,56 +26,176 @@
                         <i class="fas fa-shield-alt text-blue-900 text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold text-yellow-400">QuickReport Nigeria</h1>
+                        <h1 class="text-xl font-bold text-yellow-400">
+                            <a href="{% url 'user-board' %}">QuickReport Nigeria</a>
+                        </h1>
                         <p class="text-xs text-gray-300">Citizen Dashboard</p>
                     </div>
                 </div>
 
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="{% url 'user-board' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-1">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'user-report' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-1">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Report Crime</span>
+                    </a>
+                    <a href="{% url 'report-history' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-1">
+                        <i class="fas fa-history"></i>
+                        <span>Report History</span>
+                    </a>
+                    <a href="{% url 'citizen_notifications' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-1 relative">
+                        <i class="fas fa-bell"></i>
+                        <span>Notifications</span>
+                        {% if unread_count > 0 %}
+                        <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {{ unread_count }}
+                        </span>
+                        {% endif %}
+                    </a>
+                </div>
+
                 <!-- User Menu -->
                 <div class="flex items-center space-x-4">
-                    <span class="text-sm">Welcome, {{ user.get_full_name }}</span>
+                    <span class="text-sm hidden sm:block">Welcome, {{ user.get_full_name }}</span>
                     <div class="relative">
                         <button id="userMenu" class="flex items-center space-x-2 text-sm bg-blue-800 px-3 py-2 rounded-lg hover:bg-blue-700 transition">
                             <i class="fas fa-user-circle"></i>
-                            <span>My Account</span>
+                            <span class="hidden sm:block">My Account</span>
                             <i class="fas fa-chevron-down text-xs"></i>
                         </button>
-                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg py-2 z-50">
-                            <a href="" class="block px-4 py-2 hover:bg-gray-100">
-                                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg py-2 z-50 border border-gray-200">
+                            <a href="{% url 'user-board' %}" class="block px-4 py-2 hover:bg-gray-100 transition">
+                                <i class="fas fa-tachometer-alt mr-2 text-blue-600"></i>Dashboard
                             </a>
-                            <a href="" class="block px-4 py-2 hover:bg-gray-100">
-                                <i class="fas fa-plus-circle mr-2"></i>Report Crime
+                            <a href="{% url 'user-report' %}" class="block px-4 py-2 hover:bg-gray-100 transition">
+                                <i class="fas fa-plus-circle mr-2 text-green-600"></i>Report Crime
+                            </a>
+                            <a href="{% url 'report-history' %}" class="block px-4 py-2 hover:bg-gray-100 transition">
+                                <i class="fas fa-history mr-2 text-purple-600"></i>Report History
+                            </a>
+                            <a href="{% url 'citizen_notifications' %}" class="block px-4 py-2 hover:bg-gray-100 transition">
+                                <i class="fas fa-bell mr-2 text-yellow-600"></i>Notifications
+                                {% if unread_count > 0 %}
+                                <span class="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5">{{ unread_count }}</span>
+                                {% endif %}
                             </a>
                             <div class="border-t my-1"></div>
-                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-gray-100">
+                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-50 transition">
                                 <i class="fas fa-sign-out-alt mr-2"></i>Logout
                             </a>
                         </div>
                     </div>
+
+                    <!-- Mobile menu button -->
+                    <button id="mobileMenuButton" class="md:hidden text-white p-2">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden border-t border-blue-700 pt-4 pb-4">
+                <div class="flex flex-col space-y-4">
+                    <a href="{% url 'user-board' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-3 py-2">
+                        <i class="fas fa-tachometer-alt w-6"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{% url 'user-report' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-3 py-2">
+                        <i class="fas fa-plus-circle w-6"></i>
+                        <span>Report Crime</span>
+                    </a>
+                    <a href="{% url 'report-history' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-3 py-2">
+                        <i class="fas fa-history w-6"></i>
+                        <span>Report History</span>
+                    </a>
+                    <a href="{% url 'citizen_notifications' %}" class="text-white hover:text-yellow-300 transition font-medium flex items-center space-x-3 py-2 relative">
+                        <i class="fas fa-bell w-6"></i>
+                        <span>Notifications</span>
+                        {% if unread_count > 0 %}
+                        <span class="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                            {{ unread_count }}
+                        </span>
+                        {% endif %}
+                    </a>
                 </div>
             </div>
         </div>
     </nav>
-    {% block content %}
-    {% endblock %}
-   
 
-    <!-- JavaScript for dropdown -->
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- JavaScript -->
     <script>
         // User menu dropdown
-        document.getElementById('userMenu').addEventListener('click', function() {
+        document.getElementById('userMenu')?.addEventListener('click', function(event) {
+            event.stopPropagation();
             const dropdown = document.getElementById('userDropdown');
             dropdown.classList.toggle('hidden');
         });
 
-        // Close dropdown when clicking outside
+        // Mobile menu toggle
+        document.getElementById('mobileMenuButton')?.addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+            
+            // Toggle icon
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Close dropdowns when clicking outside
         document.addEventListener('click', function(event) {
+            // Close user dropdown
             const userMenu = document.getElementById('userMenu');
             const dropdown = document.getElementById('userDropdown');
-            if (!userMenu.contains(event.target) && !dropdown.contains(event.target)) {
+            if (userMenu && dropdown && !userMenu.contains(event.target) && !dropdown.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
+
+            // Close mobile menu when clicking on a link
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (mobileMenu && !mobileMenu.contains(event.target) && event.target.id !== 'mobileMenuButton') {
+                mobileMenu.classList.add('hidden');
+                const mobileButton = document.getElementById('mobileMenuButton');
+                if (mobileButton) {
+                    const icon = mobileButton.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            }
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('#mobileMenu a').forEach(link => {
+            link.addEventListener('click', function() {
+                const mobileMenu = document.getElementById('mobileMenu');
+                mobileMenu.classList.add('hidden');
+                const mobileButton = document.getElementById('mobileMenuButton');
+                if (mobileButton) {
+                    const icon = mobileButton.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                }
+            });
+        });
+
+        // Prevent dropdown close when clicking inside dropdown
+        document.getElementById('userDropdown')?.addEventListener('click', function(event) {
+            event.stopPropagation();
         });
     </script>
 

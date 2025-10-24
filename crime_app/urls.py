@@ -11,6 +11,14 @@ urlpatterns = [
     # ========= User ==========
     path("user-board" , views.user_board, name="user-board"),
     path("user-report" , views.user_report, name="user-report"),
+    path("report-history" , views.report_history, name="report-history"),
+    path("c-report-detail/<int:pk>" , views.c_report_detail, name="c-report-detail"),
+       # ... existing URLs ...
+    path('notifications/', views.citizen_notifications, name='citizen_notifications'),
+    path('mark-notification-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
+    path('mark-all-notifications-read/', views.mark_all_notifications_read, name='mark_all_notifications_read'),
+    
+    
 
 
     # ========= Admin ==========
