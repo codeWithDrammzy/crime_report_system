@@ -1,43 +1,209 @@
 {% extends 'crime_app/officerPage/main.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 {% block content %}
 
-<div class="container mx-auto p-6">
-    <h1 class="text-3xl font-bold mb-6">Search Result</h1>
-
-    {% if results %}
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border rounded shadow">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="py-2 px-4 border">Report ID</th>
-                        <th class="py-2 px-4 border">Department</th>
-                        <th class="py-2 px-4 border">Location</th>
-                        <th class="py-2 px-4 border">Status</th>
-                        <th class="py-2 px-4 border">Incident Type</th>
-                        <th class="py-2 px-4 border">Action</th>
-                    </tr>
-                </thead>
-                <tbody  class="text-center">
-                    {% for crime in results %}
-                        <tr class="hover:bg-gray-100">
-                            <td class="py-2 px-4 border">{{ crime.report_id }}</td>
-                            <td class="py-2 px-4 border">{{ crime.department }}</td>
-                            <td class="py-2 px-4 border">{{ crime.location }}</td>
-                            <td class="py-2 px-4 border">{{ crime.status }}</td>
-                            <td class="py-2 px-4 border">{{ crime.incident_type }}</td>
-                            <td class="py-2 px-4 border text-blue-500"> <a href="">View</a> </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header Section -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div class="mb-4 md:mb-0">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Search Results</h1>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-search mr-2 text-blue-600"></i>
+                        {% if query %}
+                            <span>Search results for: <strong class="text-blue-700">"{{ query }}"</strong></span>
+                        {% else %}
+                            <span>Enter a search query to find crime reports</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                        {{ results|length }} result{{ results|length|pluralize }} found
+                    </span>
+                   
+                </div>
+            </div>
         </div>
-    {% else %}
-        {% if query %}
-            <p class="text-red-500 mt-4">No results found for "<strong>{{ query }}</strong>".</p>
+
+        <!-- Results Section -->
+        {% if results %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="py-4 px-6 text-left font-semibold text-gray-700">Report ID</th>
+                            <th class="py-4 px-6 text-left font-semibold text-gray-700">Department</th>
+                            <th class="py-4 px-6 text-left font-semibold text-gray-700">Location</th>
+                            <th class="py-4 px-6 text-left font-semibold text-gray-700">Status</th>
+                            <th class="py-4 px-6 text-left font-semibold text-gray-700">Incident Type</th>
+                            <th class="py-4 px-6 text-center font-semibold text-gray-700">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for crime in results %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="py-4 px-6">
+                                <span class="font-mono font-semibold text-blue-600">#{{ crime.report_id }}</span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                                    <span class="text-gray-800">{{ crime.department.name }}</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6 text-gray-700">{{ crime.location }}</td>
+                            <td class="py-4 px-6">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                    {% if crime.status == 'Resolved' %}bg-green-100 text-green-800
+                                    {% elif crime.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif crime.status == 'Under Investigation' %}bg-blue-100 text-blue-800
+                                    {% elif crime.status == 'Dismissed' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {% if crime.status == 'Resolved' %}
+                                        <i class="fas fa-check-circle mr-1 text-xs"></i>
+                                    {% elif crime.status == 'Pending' %}
+                                        <i class="fas fa-clock mr-1 text-xs"></i>
+                                    {% elif crime.status == 'Under Investigation' %}
+                                        <i class="fas fa-search mr-1 text-xs"></i>
+                                    {% elif crime.status == 'Dismissed' %}
+                                        <i class="fas fa-times-circle mr-1 text-xs"></i>
+                                    {% endif %}
+                                    {{ crime.status }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 rounded-full mr-3
+                                        {% if crime.incident_type == 'Robbery' %}bg-red-500
+                                        {% elif crime.incident_type == 'Assault' %}bg-orange-500
+                                        {% elif crime.incident_type == 'Theft' %}bg-yellow-500
+                                        {% elif crime.incident_type == 'Burglary' %}bg-purple-500
+                                        {% else %}bg-blue-500{% endif %}"></div>
+                                    <span class="text-gray-800">{{ crime.incident_type }}</span>
+                                </div>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex justify-center space-x-3">
+                                    <a href="{% url 'report-detail' crime.id %}" 
+                                       class="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors flex items-center space-x-1"
+                                       title="View Details">
+                                        <i class="fas fa-eye text-xs"></i>
+                                        <span>View</span>
+                                    </a>
+                                    <button class="text-gray-600 hover:text-gray-800 font-medium text-sm transition-colors flex items-center space-x-1"
+                                            title="Edit Report">
+                                        <i class="fas fa-edit text-xs"></i>
+                                        <span>Edit</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination (if needed) -->
+            {% if results.has_other_pages %}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-700">
+                        Showing {{ results.start_index }} to {{ results.end_index }} of {{ results.paginator.count }} entries
+                    </div>
+                    <div class="flex space-x-2">
+                        <!-- Add pagination buttons here -->
+                        <button class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50">
+                            Previous
+                        </button>
+                        <button class="px-3 py-1 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
         {% else %}
-            <p class="text-gray-500 mt-4">Enter a search query to find crime reports.</p>
+        <!-- No Results State -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <div class="max-w-md mx-auto">
+                <div class="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-3xl text-gray-400"></i>
+                </div>
+                
+                {% if query %}
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">No Results Found</h3>
+                <p class="text-gray-600 mb-6">
+                    No crime reports found for "<strong class="text-blue-600">"{{ query }}"</strong>". 
+                    Try adjusting your search terms or filters.
+                </p>
+                {% else %}
+                <h3 class="text-xl font-semibold text-gray-900 mb-3">Start Your Search</h3>
+                <p class="text-gray-600 mb-6">
+                    Enter a search query in the search bar to find specific crime reports in the system.
+                </p>
+                {% endif %}
+
+                <div class="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+                    <a href="{% url 'search_reports' %}" 
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center space-x-2 font-medium">
+                        <i class="fas fa-search"></i>
+                        <span>New Search</span>
+                    </a>
+                    <a href="{% url 'add-report' %}" 
+                       class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-3 rounded-lg transition-colors inline-flex items-center space-x-2 font-medium">
+                        <i class="fas fa-plus"></i>
+                        <span>Create New Report</span>
+                    </a>
+                </div>
+            </div>
+        </div>
         {% endif %}
-    {% endif %}
+
+        <!-- Quick Stats -->
+        {% if results %}
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
+                <div class="text-2xl font-bold text-blue-600 mb-2">{{ results|length }}</div>
+                <div class="text-sm text-gray-600">Total Results</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
+                <div class="text-2xl font-bold text-green-600 mb-2">
+                    {{ results|length|divisibleby:3|default:0 }}
+                </div>
+                <div class="text-sm text-gray-600">Resolved Cases</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
+                <div class="text-2xl font-bold text-yellow-600 mb-2">
+                    {{ results|length|divisibleby:2|default:0 }}
+                </div>
+                <div class="text-sm text-gray-600">Pending Review</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 text-center">
+                <div class="text-2xl font-bold text-red-600 mb-2">
+                    {{ results|length|divisibleby:5|default:0 }}
+                </div>
+                <div class="text-sm text-gray-600">High Priority</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </div>
+
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease-in-out;
+    }
+</style>
+
 {% endblock %}

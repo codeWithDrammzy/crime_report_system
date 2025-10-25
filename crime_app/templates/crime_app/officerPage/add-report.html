@@ -3,274 +3,363 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
-<!-- ===================== Page Container ===================== -->
-<div class="bg-gray-100 p-6">
-  <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-md overflow-hidden border border-gray-200">
+<!-- Page Container -->
+<div class="min-h-screen bg-gray-50 p-4 md:p-6">
+  <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
-    <!-- ✅ Header Buttons -->
-    <div class="flex justify-between items-center bg-blue-600 text-white px-6 py-4">
-      <h1 class="text-2xl font-bold tracking-wide">Crime Reports</h1>
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-blue-700 to-blue-800 text-white px-6 py-5">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Crime Report Management</h1>
+          <p class="text-blue-100 mt-1">Manage and submit crime reports efficiently</p>
+        </div>
 
-      <div class="space-x-3">
-        <button id="showTableBtn"
-          class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg shadow transition">
-          📋 View Reports
-        </button>
-        <button id="showFormBtn"
-          class="bg-blue-700 text-white hover:bg-blue-800 px-4 py-2 rounded-lg shadow transition">
-          📝 New Report
-        </button>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button id="showTableBtn"
+            class="bg-white/20 hover:bg-white/30 text-white px-5 py-2.5 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center space-x-2 border border-white/30">
+            <i class="fas fa-table text-sm"></i>
+            <span>View Reports</span>
+          </button>
+          <button id="showFormBtn"
+            class="bg-white text-blue-700 hover:bg-blue-50 px-5 py-2.5 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center space-x-2 font-semibold">
+            <i class="fas fa-plus-circle text-sm"></i>
+            <span>New Report</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- ===================== Reports Table Section ===================== -->
-    <div id="reportTableSection" class="p-6 overflow-x-auto">
-      <table class="w-full text-left border-collapse">
-        <thead class="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th class="px-4 py-3 font-semibold text-gray-600">#</th>
-            <th class="px-4 py-3 font-semibold text-gray-600">Title</th>
-            <th class="px-4 py-3 font-semibold text-gray-600">Department</th>
-            <th class="px-4 py-3 font-semibold text-gray-600">Status</th>
-            <th class="px-4 py-3 font-semibold text-gray-600">Date</th>
-            <th class="px-4 py-3 font-semibold text-gray-600">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for report in reports %}
-          <tr class="border-b hover:bg-gray-50">
-            <td class="px-4 py-3">{{ forloop.counter }}</td>
-            <td class="px-4 py-3 font-medium text-gray-800">{{ report.title }}</td>
-            <td class="px-4 py-3">{{ report.department.name }}</td>
-            <td class="px-4 py-3">
-              <span
-                class="px-2 py-1 rounded-full text-xs font-semibold {% if report.status == 'Pending' %}bg-yellow-100 text-yellow-700{% elif report.status == 'Resolved' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
-                {{ report.status }}
-              </span>
-            </td>
-            <td class="px-4 py-3 text-gray-600">{{ report.date_reported|date:"M d, Y" }}</td>
-            <td class="px-4 py-3">
-              <a href="{% url 'report-detail' report.id %}"
-                class="text-blue-600 hover:underline font-medium">View</a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" class="text-center py-6 text-gray-500">No reports available.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Reports Table Section -->
+    <div id="reportTableSection" class="p-6">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">All Crime Reports</h2>
+        <p class="text-gray-600 text-sm">Overview of all submitted crime reports in the system</p>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="px-4 py-3 font-semibold text-gray-700 text-left">Report ID</th>
+                <th class="px-4 py-3 font-semibold text-gray-700 text-left">Title</th>
+                <th class="px-4 py-3 font-semibold text-gray-700 text-left">Department</th>
+                <th class="px-4 py-3 font-semibold text-gray-700 text-left">Status</th>
+                <th class="px-4 py-3 font-semibold text-gray-700 text-left">Date Reported</th>
+                <th class="px-4 py-3 font-semibold text-gray-700 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {% for report in reports %}
+              <tr class="hover:bg-gray-50 transition-colors duration-150">
+                <td class="px-4 py-3">
+                  <span class="font-mono text-blue-600 font-medium">#{{ report.report_id }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="font-medium text-gray-900">{{ report.title }}</div>
+                </td>
+                <td class="px-4 py-3 text-gray-600">{{ report.department.name }}</td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    {% if report.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                    {% elif report.status == 'Resolved' %}bg-green-100 text-green-800
+                    {% elif report.status == 'Under Investigation' %}bg-blue-100 text-blue-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {% if report.status == 'Pending' %}
+                      <i class="fas fa-clock mr-1 text-xs"></i>
+                    {% elif report.status == 'Resolved' %}
+                      <i class="fas fa-check-circle mr-1 text-xs"></i>
+                    {% elif report.status == 'Under Investigation' %}
+                      <i class="fas fa-search mr-1 text-xs"></i>
+                    {% endif %}
+                    {{ report.status }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-gray-500">{{ report.date_reported|date:"M d, Y" }}</td>
+                <td class="px-4 py-3">
+                  <div class="flex justify-center space-x-2">
+                    <a href="{% url 'report-detail' report.id %}"
+                      class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors">
+                      <i class="fas fa-eye mr-1 text-xs"></i>
+                      View
+                    </a>
+                    
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                  <div class="flex flex-col items-center justify-center">
+                    <i class="fas fa-inbox text-3xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-600">No reports available</p>
+                    <p class="text-sm text-gray-500 mt-1">Create your first crime report to get started</p>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
-    <!-- ===================== Report Form Section ===================== -->
-  <div id="reportFormSection" class="hidden min-h-[80vh] flex flex-col justify-center items-center bg-gray-50 p-10">
-    <div class="w-full max-w-6xl bg-white p-8 rounded-2xl shadow-md border border-gray-200">
-      <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📝 Submit New Crime Report</h2>
+    <!-- Report Form Section -->
 
-      <form method="POST" enctype="multipart/form-data" class="space-y-5">
-        {% csrf_token %}
-        
-        <!-- Two-column form layout -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Left Column -->
-          <div class="space-y-4">
-            {% for field in form %}
-              {% if forloop.counter0|divisibleby:2 %}  <!-- Even indices (0, 2, 4...) -->
-                <div class="form-group">
-                  <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ field.label }}
-                    {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
-                  </label>
-                  
-                  {% if field.name == "department" or field.name == "incident_type" %}
-                    <!-- Select field for department and incident_type -->
-                    <select name="{{ field.name }}" 
-                            id="{{ field.id_for_label }}" 
-                            class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            {% if field.field.required %}required{% endif %}>
-                      <option value="">Select {{ field.label }}</option>
-                      {% for choice in field.field.choices %}
-                        {% if choice.0 != '' %}
-                          <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
-                            {{ choice.1 }}
-                          </option>
-                        {% endif %}
-                      {% endfor %}
-                    </select>
-                  {% else %}
-                    <!-- Regular input field -->
-                    <input type="{{ field.field.widget.input_type }}" 
-                          name="{{ field.name }}" 
-                          id="{{ field.id_for_label }}" 
-                          class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value="{{ field.value|default:'' }}"
-                          {% if field.field.required %}required{% endif %}>
-                  {% endif %}
-                  
-                  {% if field.help_text %}
-                    <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <p class="text-xs text-red-500 mt-1">{{ error }}</p>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% endfor %}
-          </div>
+  <div id="reportFormSection" class="hidden p-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="mb-8 text-center">
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Submit New Crime Report</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">Complete all required fields to submit a detailed crime report. Ensure accuracy for effective investigation.</p>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-8">
+          {% csrf_token %}
           
-          <!-- Right Column -->
-          <div class="space-y-4">
-            {% for field in form %}
-              {% if not forloop.counter0|divisibleby:2 %}  <!-- Odd indices (1, 3, 5...) -->
-                <div class="form-group">
-                  <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
-                    {{ field.label }}
-                    {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
-                  </label>
-                  
-                  {% if field.name == "department" or field.name == "incident_type" %}
-                    <!-- Select field for department and incident_type -->
-                    <select name="{{ field.name }}" 
-                            id="{{ field.id_for_label }}" 
-                            class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            {% if field.field.required %}required{% endif %}>
-                      <option value="">Select {{ field.label }}</option>
-                      {% for choice in field.field.choices %}
-                        {% if choice.0 != '' %}
-                          <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
-                            {{ choice.1 }}
-                          </option>
-                        {% endif %}
-                      {% endfor %}
-                    </select>
-                  {% else %}
-                    <!-- Regular input field -->
-                    <input type="{{ field.field.widget.input_type }}" 
-                          name="{{ field.name }}" 
-                          id="{{ field.id_for_label }}" 
-                          class="border border-gray-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value="{{ field.value|default:'' }}"
-                          {% if field.field.required %}required{% endif %}>
-                  {% endif %}
-                  
-                  {% if field.help_text %}
-                    <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <p class="text-xs text-red-500 mt-1">{{ error }}</p>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </div>
-
-        <!-- ✅ Multimedia Evidence Section (Full width) -->
-        <div class="border-t pt-6 mt-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-6 text-center">📷 Multimedia Evidence</h3>
-
-            <!-- Three columns in one line -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                <!-- Photo Capture Column -->
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
-                    <h4 class="font-semibold text-gray-700 mb-3">📸 Photo</h4>
-                    <video id="cameraPreview" class="mx-auto rounded-md hidden w-full max-w-xs" autoplay></video>
-                    <canvas id="photoCanvas" class="hidden"></canvas>
-                    <div id="photoPreviewContainer" class="my-3"></div>
-
-                    <div class="space-y-2">
-                        <button type="button" id="openCameraBtn"
-                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                            Open Camera
-                        </button>
-                        <button type="button" id="takePhotoBtn"
-                            class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                            Take Photo
-                        </button>
-                    </div>
-
-                    <input type="file" name="photo_file" id="photoFileInput" accept="image/*" class="hidden" />
-                </div>
-
-                <!-- Video Recording Column -->
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
-                    <h4 class="font-semibold text-gray-700 mb-3">🎥 Video</h4>
-                    <video id="videoPreview" class="mx-auto rounded-md hidden w-full max-w-xs" controls></video>
-                    
-                    <div class="space-y-2">
-                        <button type="button" id="startVideoBtn"
-                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                            Start Recording
-                        </button>
-                        <button type="button" id="stopVideoBtn"
-                            class="hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                            Stop Recording
-                        </button>
-                    </div>
-
-                    <input type="file" name="video_file" id="videoFileInput" accept="video/*" class="hidden" />
-                </div>
-
-                <!-- Audio Recording Column -->
-                <div class="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center h-full">
-                    <h4 class="font-semibold text-gray-700 mb-3">🎤 Audio</h4>
-                    <audio id="audioPreview" class="mx-auto hidden w-full" controls></audio>
-                    
-                    <div class="space-y-2">
-                        <button type="button" id="startAudioBtn"
-                            class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                            Record Voice
-                        </button>
-                        <button type="button" id="stopAudioBtn"
-                            class="hidden bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg shadow text-sm w-full">
-                            Stop
-                        </button>
-                    </div>
-
-                    <input type="file" name="audio_file" id="audioFileInput" accept="audio/*" class="hidden" />
-                </div>
+          <!-- Basic Information Card -->
+          <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center mb-6">
+              <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                <i class="fas fa-info-circle text-blue-600"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900">Basic Information</h3>
             </div>
-        </div>
-        <!-- Submit Buttons -->
-        <div class="flex justify-center space-x-4 mt-8">
-          <button type="submit"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow transition">
-            Submit Report
-          </button>
-          <button type="button" id="cancelFormBtn"
-            class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg shadow transition">
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {% for field in form %}
+                {% if forloop.counter0|divisibleby:2 and field.name != 'photo_file' and field.name != 'video_file' and field.name != 'audio_file' %}
+                  <div class="space-y-2">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                      {{ field.label }}
+                      {% if field.field.required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+                    </label>
+                    
+                    {% if field.name == "department" or field.name == "incident_type" %}
+                      <select name="{{ field.name }}" 
+                              id="{{ field.id_for_label }}" 
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                              {% if field.field.required %}required{% endif %}>
+                        <option value="">Select {{ field.label }}</option>
+                        {% for choice in field.field.choices %}
+                          {% if choice.0 != '' %}
+                            <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                              {{ choice.1 }}
+                            </option>
+                          {% endif %}
+                        {% endfor %}
+                      </select>
+                    {% else %}
+                      <input type="{{ field.field.widget.input_type }}" 
+                            name="{{ field.name }}" 
+                            id="{{ field.id_for_label }}" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                            value="{{ field.value|default:'' }}"
+                            placeholder="Enter {{ field.label|lower }}"
+                            {% if field.field.required %}required{% endif %}>
+                    {% endif %}
+                    
+                    {% if field.help_text %}
+                      <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                      <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
 
+          <!-- Additional Details Card -->
+          <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center mb-6">
+              <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                <i class="fas fa-file-alt text-blue-600"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900">Additional Details</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {% for field in form %}
+                {% if not forloop.counter0|divisibleby:2 and field.name != 'photo_file' and field.name != 'video_file' and field.name != 'audio_file' %}
+                  <div class="space-y-2">
+                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                      {{ field.label }}
+                      {% if field.field.required %}<span class="text-red-500 ml-1">*</span>{% endif %}
+                    </label>
+                    
+                    {% if field.name == "department" or field.name == "incident_type" %}
+                      <select name="{{ field.name }}" 
+                              id="{{ field.id_for_label }}" 
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                              {% if field.field.required %}required{% endif %}>
+                        <option value="">Select {{ field.label }}</option>
+                        {% for choice in field.field.choices %}
+                          {% if choice.0 != '' %}
+                            <option value="{{ choice.0 }}" {% if field.value|stringformat:"s" == choice.0|stringformat:"s" %}selected{% endif %}>
+                              {{ choice.1 }}
+                            </option>
+                          {% endif %}
+                        {% endfor %}
+                      </select>
+                    {% else %}
+                      <input type="{{ field.field.widget.input_type }}" 
+                            name="{{ field.name }}" 
+                            id="{{ field.id_for_label }}" 
+                            class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                            value="{{ field.value|default:'' }}"
+                            placeholder="Enter {{ field.label|lower }}"
+                            {% if field.field.required %}required{% endif %}>
+                    {% endif %}
+                    
+                    {% if field.help_text %}
+                      <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% for error in field.errors %}
+                      <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Evidence Collection Card -->
+          <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <div class="flex items-center mb-6">
+              <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                <i class="fas fa-camera text-blue-600"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-900">Evidence Collection</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Photo Evidence -->
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-blue-400 transition-colors">
+                <div class="bg-blue-50 p-3 rounded-full inline-flex mb-4">
+                  <i class="fas fa-camera text-blue-600 text-xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">Photo Evidence</h4>
+                <p class="text-sm text-gray-600 mb-4">Capture or upload photographic evidence</p>
+                
+                <video id="cameraPreview" class="mx-auto rounded-lg hidden w-full mb-3" autoplay muted></video>
+                <canvas id="photoCanvas" class="hidden"></canvas>
+                <div id="photoPreviewContainer" class="my-3"></div>
+
+                <div class="space-y-2">
+                  <button type="button" id="openCameraBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium">
+                    <i class="fas fa-camera mr-2"></i>Open Camera
+                  </button>
+                  <button type="button" id="takePhotoBtn"
+                    class="hidden w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium">
+                    <i class="fas fa-camera-retro mr-2"></i>Capture Photo
+                  </button>
+                </div>
+
+                <!-- Single photo file input -->
+                <input type="file" name="photo_file" id="photoFileInput" accept="image/*" class="hidden" />
+              </div>
+
+              <!-- Video Evidence -->
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-blue-400 transition-colors">
+                <div class="bg-blue-50 p-3 rounded-full inline-flex mb-4">
+                  <i class="fas fa-video text-blue-600 text-xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">Video Recording</h4>
+                <p class="text-sm text-gray-600 mb-4">Record or upload video evidence</p>
+                
+                <!-- Live video preview during recording -->
+                <video id="videoLivePreview" class="mx-auto rounded-lg hidden w-full mb-3" autoplay muted></video>
+                <!-- Playback preview after recording -->
+                <video id="videoPreview" class="mx-auto rounded-lg hidden w-full mb-3" controls></video>
+                
+                <div class="space-y-2">
+                  <button type="button" id="startVideoBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium">
+                    <i class="fas fa-record-vinyl mr-2"></i>Start Recording
+                  </button>
+                  <button type="button" id="stopVideoBtn"
+                    class="hidden w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium">
+                    <i class="fas fa-stop mr-2"></i>Stop Recording
+                  </button>
+                </div>
+
+                <!-- Single video file input -->
+                <input type="file" name="video_file" id="videoFileInput" accept="video/*" class="hidden" />
+              </div>
+
+              <!-- Audio Evidence -->
+              <div class="border-2 border-dashed border-gray-300 rounded-xl p-5 text-center hover:border-blue-400 transition-colors">
+                <div class="bg-blue-50 p-3 rounded-full inline-flex mb-4">
+                  <i class="fas fa-microphone text-blue-600 text-xl"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-2">Audio Recording</h4>
+                <p class="text-sm text-gray-600 mb-4">Record or upload audio evidence</p>
+                
+                <audio id="audioPreview" class="mx-auto hidden w-full mb-3" controls></audio>
+                
+                <div class="space-y-2">
+                  <button type="button" id="startAudioBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium">
+                    <i class="fas fa-microphone mr-2"></i>Start Recording
+                  </button>
+                  <button type="button" id="stopAudioBtn"
+                    class="hidden w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-lg transition-colors text-sm font-medium">
+                    <i class="fas fa-stop mr-2"></i>Stop Recording
+                  </button>
+                </div>
+
+                <!-- Single audio file input -->
+                <input type="file" name="audio_file" id="audioFileInput" accept="audio/*" class="hidden" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex flex-col sm:flex-row justify-center gap-4 pt-6 border-t border-gray-200">
+            <button type="submit"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center justify-center space-x-2">
+              <i class="fas fa-paper-plane"></i>
+              <span>Submit Report</span>
+            </button>
+            <button type="button" id="cancelFormBtn"
+              class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-8 py-3 rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center justify-center space-x-2">
+              <i class="fas fa-times"></i>
+              <span>Cancel</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ===================== Script Section ===================== -->
+<!-- JavaScript -->
 <script>
+  // Section Toggle
   const formSection = document.getElementById('reportFormSection');
   const tableSection = document.getElementById('reportTableSection');
   const showFormBtn = document.getElementById('showFormBtn');
   const showTableBtn = document.getElementById('showTableBtn');
   const cancelFormBtn = document.getElementById('cancelFormBtn');
 
-  // Toggle sections
   showFormBtn.onclick = () => {
     formSection.classList.remove('hidden');
     tableSection.classList.add('hidden');
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
   };
+
   showTableBtn.onclick = () => {
     formSection.classList.add('hidden');
     tableSection.classList.remove('hidden');
   };
+
   cancelFormBtn.onclick = () => showTableBtn.click();
 
-  // ======== CAMERA (Photo Capture) =========
+  // Camera Functionality
   const openCameraBtn = document.getElementById('openCameraBtn');
   const takePhotoBtn = document.getElementById('takePhotoBtn');
   const cameraPreview = document.getElementById('cameraPreview');
@@ -280,11 +369,18 @@
   let cameraStream;
 
   openCameraBtn.onclick = async () => {
-    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-    cameraPreview.srcObject = cameraStream;
-    cameraPreview.classList.remove('hidden');
-    takePhotoBtn.classList.remove('hidden');
-    openCameraBtn.classList.add('hidden');
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 1280, height: 720 } 
+      });
+      cameraPreview.srcObject = cameraStream;
+      cameraPreview.classList.remove('hidden');
+      takePhotoBtn.classList.remove('hidden');
+      openCameraBtn.classList.add('hidden');
+    } catch (error) {
+      alert('Unable to access camera. Please check permissions.');
+      console.error('Camera error:', error);
+    }
   };
 
   takePhotoBtn.onclick = () => {
@@ -292,89 +388,222 @@
     photoCanvas.width = cameraPreview.videoWidth;
     photoCanvas.height = cameraPreview.videoHeight;
     context.drawImage(cameraPreview, 0, 0);
+    
     photoCanvas.toBlob(blob => {
-      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+      const file = new File([blob], `crime_photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
       photoFileInput.files = dataTransfer.files;
 
-      // preview
+      // Create preview
       const img = document.createElement('img');
       img.src = URL.createObjectURL(file);
-      img.classList.add('mx-auto', 'rounded-md', 'mt-3', 'max-h-56');
+      img.classList.add('mx-auto', 'rounded-lg', 'mt-3', 'max-h-48', 'border', 'border-gray-200');
       photoPreviewContainer.innerHTML = '';
       photoPreviewContainer.appendChild(img);
-    }, 'image/jpeg');
+
+      // Stop camera
+      cameraStream.getTracks().forEach(track => track.stop());
+      cameraPreview.classList.add('hidden');
+      takePhotoBtn.classList.add('hidden');
+      openCameraBtn.classList.remove('hidden');
+    }, 'image/jpeg', 0.9);
   };
 
-  // ======== VIDEO RECORDING =========
+  // Video Recording
   const startVideoBtn = document.getElementById('startVideoBtn');
   const stopVideoBtn = document.getElementById('stopVideoBtn');
+  const videoLivePreview = document.getElementById('videoLivePreview');
   const videoPreview = document.getElementById('videoPreview');
   const videoFileInput = document.getElementById('videoFileInput');
-  let videoRecorder, videoChunks = [];
+  let videoRecorder, videoStream, videoChunks = [];
 
   startVideoBtn.onclick = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    videoRecorder = new MediaRecorder(stream);
-    videoChunks = [];
+    try {
+      console.log('Starting video recording...');
+      
+      // Get user media
+      videoStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }, 
+        audio: true 
+      });
+      
+      console.log('Media stream obtained:', videoStream);
+      
+      // Show live preview
+      videoLivePreview.srcObject = videoStream;
+      videoLivePreview.classList.remove('hidden');
+      videoPreview.classList.add('hidden');
+      
+      // Initialize MediaRecorder with supported MIME type
+      const options = { 
+        mimeType: 'video/webm;codecs=vp8,opus' 
+      };
+      
+      // Fallback for different browsers
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm;codecs=vp9,opus';
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm';
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/mp4';
+      }
+      
+      console.log('Using MIME type:', options.mimeType);
+      
+      videoRecorder = new MediaRecorder(videoStream, options);
+      videoChunks = [];
 
-    videoRecorder.ondataavailable = e => videoChunks.push(e.data);
-    videoRecorder.onstop = () => {
-      const blob = new Blob(videoChunks, { type: 'video/mp4' });
-      const file = new File([blob], 'recording.mp4', { type: 'video/mp4' });
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      videoFileInput.files = dt.files;
+      videoRecorder.ondataavailable = (event) => {
+        console.log('Data available:', event.data.size);
+        if (event.data && event.data.size > 0) {
+          videoChunks.push(event.data);
+        }
+      };
 
-      videoPreview.src = URL.createObjectURL(blob);
-      videoPreview.classList.remove('hidden');
-    };
+      videoRecorder.onstop = () => {
+        console.log('Recording stopped, chunks:', videoChunks.length);
+        const blob = new Blob(videoChunks, { 
+          type: videoChunks[0]?.type || 'video/webm' 
+        });
+        
+        console.log('Blob created:', blob.size, blob.type);
+        
+        const file = new File([blob], `crime_video_${Date.now()}.webm`, { 
+          type: blob.type 
+        });
+        
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        videoFileInput.files = dt.files;
 
-    videoRecorder.start();
-    startVideoBtn.classList.add('hidden');
-    stopVideoBtn.classList.remove('hidden');
+        // Show playback preview
+        videoPreview.src = URL.createObjectURL(blob);
+        videoPreview.classList.remove('hidden');
+        videoLivePreview.classList.add('hidden');
+        
+        // Stop all tracks
+        videoStream.getTracks().forEach(track => {
+          track.stop();
+          console.log('Stopped track:', track.kind);
+        });
+        
+        console.log('Video recording completed');
+      };
+
+      videoRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event.error);
+        alert('Error during video recording: ' + event.error);
+      };
+
+      // Start recording with timeslice to ensure data availability
+      videoRecorder.start(1000); // Collect data every second
+      console.log('Recording started, state:', videoRecorder.state);
+      
+      // Update UI
+      startVideoBtn.classList.add('hidden');
+      stopVideoBtn.classList.remove('hidden');
+      
+    } catch (error) {
+      console.error('Video recording error:', error);
+      alert('Unable to access camera/microphone. Please check permissions.\nError: ' + error.message);
+    }
   };
 
   stopVideoBtn.onclick = () => {
-    videoRecorder.stop();
-    startVideoBtn.classList.remove('hidden');
-    stopVideoBtn.classList.add('hidden');
+    if (videoRecorder && videoRecorder.state === 'recording') {
+      console.log('Stopping recording...');
+      videoRecorder.stop();
+      startVideoBtn.classList.remove('hidden');
+      stopVideoBtn.classList.add('hidden');
+    }
   };
 
-  // ======== AUDIO RECORDING =========
+  // Audio Recording
   const startAudioBtn = document.getElementById('startAudioBtn');
   const stopAudioBtn = document.getElementById('stopAudioBtn');
   const audioPreview = document.getElementById('audioPreview');
   const audioFileInput = document.getElementById('audioFileInput');
-  let audioRecorder, audioChunks = [];
+  let audioRecorder, audioStream, audioChunks = [];
 
   startAudioBtn.onclick = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+    try {
+      console.log('Starting audio recording...');
+      
+      audioStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+      
+      const options = { 
+        mimeType: 'audio/webm;codecs=opus' 
+      };
+      
+      // Fallback for different browsers
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'audio/webm';
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'audio/mp4';
+      }
+      
+      audioRecorder = new MediaRecorder(audioStream, options);
+      audioChunks = [];
 
-    audioRecorder.ondataavailable = e => audioChunks.push(e.data);
-    audioRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-      const file = new File([blob], 'voice.mp3', { type: 'audio/mp3' });
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      audioFileInput.files = dt.files;
+      audioRecorder.ondataavailable = (event) => {
+        console.log('Audio data available:', event.data.size);
+        if (event.data && event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      };
 
-      audioPreview.src = URL.createObjectURL(blob);
-      audioPreview.classList.remove('hidden');
-    };
+      audioRecorder.onstop = () => {
+        console.log('Audio recording stopped');
+        const blob = new Blob(audioChunks, { 
+          type: audioChunks[0]?.type || 'audio/webm' 
+        });
+        
+        const file = new File([blob], `crime_audio_${Date.now()}.webm`, { 
+          type: blob.type 
+        });
+        
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        audioFileInput.files = dt.files;
 
-    audioRecorder.start();
-    startAudioBtn.classList.add('hidden');
-    stopAudioBtn.classList.remove('hidden');
+        audioPreview.src = URL.createObjectURL(blob);
+        audioPreview.classList.remove('hidden');
+        
+        // Stop all tracks
+        audioStream.getTracks().forEach(track => track.stop());
+      };
+
+      audioRecorder.start(1000); // Collect data every second
+      console.log('Audio recording started');
+      
+      startAudioBtn.classList.add('hidden');
+      stopAudioBtn.classList.remove('hidden');
+      
+    } catch (error) {
+      console.error('Audio recording error:', error);
+      alert('Unable to access microphone. Please check permissions.\nError: ' + error.message);
+    }
   };
 
   stopAudioBtn.onclick = () => {
-    audioRecorder.stop();
-    startAudioBtn.classList.remove('hidden');
-    stopAudioBtn.classList.add('hidden');
+    if (audioRecorder && audioRecorder.state === 'recording') {
+      audioRecorder.stop();
+      startAudioBtn.classList.remove('hidden');
+      stopAudioBtn.classList.add('hidden');
+    }
   };
 </script>
 

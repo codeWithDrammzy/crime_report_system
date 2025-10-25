@@ -236,7 +236,7 @@ def officer_board(request):
         return redirect('my-login')
 
     officer = request.user.officer
-    officer_dept = officer.department
+    officer_dept = officer.department   
     reports = CrimeReport.objects.filter(department=officer_dept)
 
     context = {
@@ -244,7 +244,7 @@ def officer_board(request):
         'resolved_cases': reports.filter(status='Resolved').count(),
         'pending_cases': reports.filter(status='Pending').count(),
         'dismissed_cases': reports.filter(status='Dismissed').count(),
-        'recent_reports': reports.order_by('-date_reported')[:8],
+        'recent_reports': reports.order_by('-date_reported')[:4],
         'new_reports': reports.order_by('-date_reported')[:3],
     }
     return render(request, 'crime_app/officerPage/officer-board.html', context)
