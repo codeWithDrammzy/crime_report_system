@@ -204,7 +204,7 @@
             <th class="px-6 py-4 text-left font-semibold text-sm">Location & Contact</th>
             <th class="px-6 py-4 text-center font-semibold text-sm">Personnel</th>
             <th class="px-6 py-4 text-center font-semibold text-sm">Status</th>
-            <th class="px-6 py-4 text-center font-semibold text-sm">Actions</th>
+            {% comment %} <th class="px-6 py-4 text-center font-semibold text-sm">Actions</th> {% endcomment %}
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -280,7 +280,7 @@
               {% endif %}
             </td>
 
-            <!-- Actions -->
+            {% comment %} <!-- Actions -->
             <td class="px-6 py-4 text-center">
               <div class="flex justify-center space-x-2">
                 <button class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition" title="Edit">
@@ -302,7 +302,7 @@
                 </button>
                 {% endif %}
               </div>
-            </td>
+            </td> {% endcomment %}
           </tr>
           {% empty %}
           <tr>
